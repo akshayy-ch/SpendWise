@@ -15,4 +15,6 @@ public interface SettlementRepository extends JpaRepository<Settlement, UUID> {
             UUID payerId,
             UUID receiverId
     );
+
+    boolean existsByCategoryId(UUID categoryId);
 }

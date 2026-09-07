@@ -13,6 +13,7 @@ public interface SettlementMapper {
     @Mapping(target = "expenseShareId", source = "expenseShare.id")
     @Mapping(target = "payerName", source = "payer.name")
     @Mapping(target = "receiverName", source = "receiver.name")
+    @Mapping(target = "categoryName", source = "category.name")
     SettlementResponse toResponse(Settlement settlement);
 
     List<SettlementResponse> toResponseList(

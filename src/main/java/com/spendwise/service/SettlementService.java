@@ -2,12 +2,10 @@ package com.spendwise.service;
 
 import com.spendwise.dto.request.settlement.CreateSettlementRequest;
 import com.spendwise.dto.response.settlement.SettlementResponse;
-import com.spendwise.entity.Expense;
-import com.spendwise.entity.ExpenseShare;
-import com.spendwise.entity.Settlement;
-import com.spendwise.entity.User;
+import com.spendwise.entity.*;
 import com.spendwise.enums.ExpenseShareStatus;
 import com.spendwise.enums.SettlementStatus;
+import com.spendwise.exception.CategoryExceptions.CategoryDoesNotExist;
 import com.spendwise.exception.ExpenseShareExceptions.AlreadySettledException;
 import com.spendwise.exception.ExpenseShareExceptions.ExpenseShareDoesNotExist;
 import com.spendwise.exception.GroupExceptions.UnauthorizedGroupActionException;
@@ -15,6 +13,7 @@ import com.spendwise.exception.SettlementExceptions.InvalidSettlementException;
 import com.spendwise.exception.SettlementExceptions.ReceiverNotFound;
 import com.spendwise.exception.SettlementExceptions.SettlementDoesNotExist;
 import com.spendwise.mapper.SettlementMapper;
+import com.spendwise.repository.CategoryRepository;
 import com.spendwise.repository.ExpenseShareRepository;
 import com.spendwise.repository.SettlementRepository;
 import com.spendwise.repository.UserRepository;
@@ -36,6 +35,7 @@ public class SettlementService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final SettlementMapper settlementMapper;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public SettlementResponse createSettlement(UUID expenseShareId, CreateSettlementRequest request) {
@@ -51,6 +51,10 @@ public class SettlementService {
 
         User receiver = userRepository.findById(request.getReceiverId()).orElseThrow(() -> new ReceiverNotFound("Receiver not found"));
 
+        Category category = categoryRepository
+                .findAvailableCategory(request.getCategoryName(), currentUserId)
+                .orElseThrow(() ->
+                        new CategoryDoesNotExist("Category does not exist"));
         Expense expense = expenseShare.getExpense();
         if (!expense.getUser().getId().equals(receiver.getId())) {
             throw new InvalidSettlementException("Receiver must be the original expense payer");
@@ -72,6 +76,7 @@ public class SettlementService {
                 .expenseShare(expenseShare)
                 .settledAt(OffsetDateTime.now())
                 .status(SettlementStatus.SETTLED)
+                .category(category)
                 .build();
 
         BigDecimal remainingAmount = expenseShare.getRemainingAmount().subtract(amount);

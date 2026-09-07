@@ -1,10 +1,7 @@
 package com.spendwise.dto.request.settlement;
 
 import com.spendwise.entity.User;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -25,5 +22,9 @@ public class CreateSettlementRequest {
 
     @NotNull(message = "Receiver id is a required field")
     private UUID receiverId;
+
+    @NotBlank(message = "Category is a required field")
+    @Size(min = 3, max = 50)
+    private String categoryName;
 
 }

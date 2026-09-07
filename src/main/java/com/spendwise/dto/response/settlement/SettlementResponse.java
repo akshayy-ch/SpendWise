@@ -20,6 +20,8 @@ public class SettlementResponse {
     private String payerName;
     private String receiverName;
 
+    private String categoryName;
+
     private BigDecimal amount;
     private OffsetDateTime settledAt;
 

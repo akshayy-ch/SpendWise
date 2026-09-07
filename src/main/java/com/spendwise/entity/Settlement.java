@@ -51,4 +51,9 @@ public class Settlement {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "expense_share_id", referencedColumnName = "id", nullable = false)
     private ExpenseShare expenseShare;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", referencedColumnName = "id", nullable = false)
+    private Category category;
+
 }

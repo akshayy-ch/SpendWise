@@ -11,6 +11,7 @@ import com.spendwise.exception.CategoryExceptions.*;
 import com.spendwise.mapper.CategoryMapper;
 import com.spendwise.repository.CategoryRepository;
 import com.spendwise.repository.ExpenseRepository;
+import com.spendwise.repository.SettlementRepository;
 import com.spendwise.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ExpenseRepository expenseRepository;
     private final CategoryMapper categoryMapper;
+    private final SettlementRepository settlementRepository;
 
     private final CurrentUserService currentUserService;
 
@@ -90,12 +92,12 @@ public class CategoryService {
                     "System categories cannot be deleted."
             );
         }
+        boolean usedBySettlement = settlementRepository.existsByCategoryId(category.getId());
 
-        if (expenseRepository.existsByCategoryIdAndUserId(
-                category.getId(), userId)) {
+        if (expenseRepository.existsByCategoryIdAndUserId(category.getId(), userId) || usedBySettlement) {
 
             throw new CategoryInUseException(
-                    "Cannot delete category because active expenses are linked to it."
+                    "Cannot delete category because it is currently in use."
             );
         }
 
