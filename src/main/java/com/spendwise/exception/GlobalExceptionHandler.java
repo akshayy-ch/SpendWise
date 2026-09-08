@@ -4,6 +4,7 @@ import com.spendwise.dto.error.ErrorResponse;
 import com.spendwise.exception.AuthExceptions.EmailAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.PhoneNoAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.UsernameAlreadyExistsException;
+import com.spendwise.exception.BudgetExceptions.*;
 import com.spendwise.exception.CategoryExceptions.*;
 import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
 import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
@@ -210,8 +211,33 @@ public class GlobalExceptionHandler{
         return buildErrorResponse(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(DuplicateGroupMemberException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateGroupMemberException(DuplicateGroupMemberException e){
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(BudgetAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleBudgetAlreadyExistsException(BudgetAlreadyExistsException e){
+        return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(BudgetNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBudgetNotFoundException(BudgetNotFoundException e){
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBudgetLimitException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidBudgetLimitException(InvalidBudgetLimitException e){
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidStartandEndDateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStartandEndDateException(InvalidStartandEndDateException e){
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateBudgetCategoryException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateBudgetCategoryException(DuplicateBudgetCategoryException e) {
         return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
     }
 }
