@@ -52,7 +52,7 @@ public class ExpenseService {
         Category category = categoryRepository
                 .findAvailableCategory(request.getCategoryName(), userId)
                 .orElseThrow(() ->
-                        new CategoryDoesNotExist("Category does not exist"));
+                        new CategoryDoesNotExist("Category does not exist" + request.getCategoryName()));
 
         User userObj = userRepository.getReferenceById(userId);
 

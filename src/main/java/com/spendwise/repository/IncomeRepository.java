@@ -5,6 +5,8 @@ import com.spendwise.entity.Income;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -42,5 +44,18 @@ public interface IncomeRepository extends JpaRepository<Income, UUID>, JpaSpecif
             String source,
             OffsetDateTime start,
             OffsetDateTime end
+    );
+
+    @Query("""
+    SELECT i
+    FROM Income i
+    WHERE i.user.id = :userId
+      AND i.incomeAt >= :start
+      AND i.incomeAt < :end
+""")
+    List<Income> findIncomeForActivity(
+            @Param("userId") UUID userId,
+            @Param("start") OffsetDateTime start,
+            @Param("end") OffsetDateTime end
     );
 }

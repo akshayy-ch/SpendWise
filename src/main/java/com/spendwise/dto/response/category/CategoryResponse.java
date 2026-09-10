@@ -1,5 +1,6 @@
 package com.spendwise.dto.response.category;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -10,5 +11,6 @@ import lombok.*;
 public class CategoryResponse {
     private String name;
     private String icon;
+    @JsonProperty("system")
     private boolean isSystem;
 }

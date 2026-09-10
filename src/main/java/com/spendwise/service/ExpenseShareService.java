@@ -103,7 +103,7 @@ public class ExpenseShareService {
             case EQUAL -> amounts =
                     calculateEqualShares(
                             expense.getAmount(),
-                            users.size()
+                            users.size()+1
                     );
 
             case PERCENTAGE -> {
@@ -125,7 +125,7 @@ public class ExpenseShareService {
             case RANDOM -> amounts =
                     calculateRandomShares(
                             expense.getAmount(),
-                            users.size()
+                            users.size()+1
                     );
 
             default -> throw new InvalidSplitException(

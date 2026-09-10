@@ -34,8 +34,12 @@ public class CategoryService {
 
         UUID userId = currentUserService.getCurrentUserId();
 
-        if(categoryRepository.existsByNameAndUserId(request.getName(), userId)){
-            throw new DuplicateCategoryException("Category with same name exists");
+        if (categoryRepository.existsByNameAndUserId(request.getName(), userId)
+                || categoryRepository.existsByNameAndUserIsNull(request.getName())) {
+
+            throw new DuplicateCategoryException(
+                    "Category with same name already exists"
+            );
         }
 
         User user = userRepository.getReferenceById(userId);
@@ -85,7 +89,7 @@ public class CategoryService {
         Category category = categoryRepository
                 .findAvailableCategory(request.getName(), userId)
                 .orElseThrow(() ->
-                        new CategoryDoesNotExist("Category does not exist"));
+                        new CategoryDoesNotExist("Category does not exist" + request.getName()));
 
         if (category.isSystem()) {
             throw new SystemCategoryException(

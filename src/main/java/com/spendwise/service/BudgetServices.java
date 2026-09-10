@@ -69,7 +69,7 @@ public class BudgetServices {
             }
             Category category = categoryRepository
                     .findAvailableCategory(categoryName, userId)
-                    .orElseThrow(() -> new CategoryDoesNotExist("Category does not exist"));
+                    .orElseThrow(() -> new CategoryDoesNotExist("Category does not exist" + categoryName));
             totalCategoryBudget = totalCategoryBudget.add(limit);
 
             Budget createdBudget = Budget.builder()
@@ -219,7 +219,7 @@ public class BudgetServices {
                         )
                         .orElseThrow(() ->
                                 new CategoryDoesNotExist(
-                                        "Category does not exist"
+                                        "Category does not exist " + item.getCategoryName()
                                 ));
 
                 // Check whether this category already has a budget

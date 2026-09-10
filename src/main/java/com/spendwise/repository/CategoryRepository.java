@@ -21,14 +21,16 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     Optional<Category> findByNameAndUserId(String name, UUID userId);
 
+    boolean existsByNameAndUserIsNull(String name);
+
     boolean existsByNameAndUserId(String name, UUID userId);
 
     @Query("""
-        SELECT c
-        FROM Category c
-        WHERE c.name = :name
-        AND (c.isSystem = true OR c.user.id = :userId)
-        """)
+    SELECT c
+    FROM Category c
+    WHERE LOWER(c.name) = LOWER(:name)
+    AND (c.isSystem = true OR c.user.id = :userId)
+    """)
     Optional<Category> findAvailableCategory(
             @Param("name") String name,
             @Param("userId") UUID userId

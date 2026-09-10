@@ -26,7 +26,7 @@ public class CategoryController {
     }
 
     @GetMapping("/getCategories")
-    public ResponseEntity<List<CategoryResponse>> getCategories(@Valid GetCategoriesRequest request) {
+    public ResponseEntity<List<CategoryResponse>> getCategories(@Valid @ModelAttribute GetCategoriesRequest request) {
         return ResponseEntity.ok(categoryService.getCategories(request));
     }
 

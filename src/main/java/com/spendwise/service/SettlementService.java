@@ -54,7 +54,7 @@ public class SettlementService {
         Category category = categoryRepository
                 .findAvailableCategory(request.getCategoryName(), currentUserId)
                 .orElseThrow(() ->
-                        new CategoryDoesNotExist("Category does not exist"));
+                        new CategoryDoesNotExist("Category does not exist" + request.getCategoryName()));
         Expense expense = expenseShare.getExpense();
         if (!expense.getUser().getId().equals(receiver.getId())) {
             throw new InvalidSettlementException("Receiver must be the original expense payer");
