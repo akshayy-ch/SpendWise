@@ -25,4 +25,6 @@ public class GetExpenseRequest {
     private OffsetDateTime from;
 
     private OffsetDateTime to;
+
+    private String search;
 }

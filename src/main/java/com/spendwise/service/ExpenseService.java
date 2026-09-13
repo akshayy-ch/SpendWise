@@ -2,11 +2,13 @@ package com.spendwise.service;
 
 import com.spendwise.dto.request.expense.CreateExpenseRequest;
 import com.spendwise.dto.request.expense.GetExpenseRequest;
+import com.spendwise.dto.response.expense.ExpensePageResponse;
 import com.spendwise.dto.response.expense.ExpenseResponse;
 import com.spendwise.entity.Category;
 import com.spendwise.entity.Expense;
 import com.spendwise.entity.User;
 import com.spendwise.entity.Wallet;
+import com.spendwise.enums.ExpenseSortField;
 import com.spendwise.enums.ExpenseStatus;
 import com.spendwise.enums.WalletStatus;
 import com.spendwise.exception.CategoryExceptions.CategoryDoesNotExist;
@@ -25,10 +27,15 @@ import com.spendwise.repository.WalletRepository;
 import com.spendwise.specification.ExpenseSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,7 +55,7 @@ public class ExpenseService {
 
         UUID userId = currentUserService.getCurrentUserId();
 
-        Wallet wallet = walletRepository.findByWalletNameAndUserId(request.getWalletName(), userId).orElseThrow(()->new WalletDoesNotExist("Error"));
+        Wallet wallet = walletRepository.findByWalletNameAndUserId(request.getWalletName(), userId).orElseThrow(()->new WalletDoesNotExist("Error "+request.getWalletName()));
         Category category = categoryRepository
                 .findAvailableCategory(request.getCategoryName(), userId)
                 .orElseThrow(() ->
@@ -75,7 +82,7 @@ public class ExpenseService {
         return expenseMapper.toResponse(savedExpense);
     }
 
-    public List<ExpenseResponse> getExpenses(GetExpenseRequest request){
+    public ExpensePageResponse getExpenses(GetExpenseRequest request, Pageable pageable){
         UUID userId = currentUserService.getCurrentUserId();
         Specification<Expense> specification = Specification.where(ExpenseSpecification.hasUserId(userId));
 
@@ -95,9 +102,26 @@ public class ExpenseService {
         if(request.getTo() != null){
             specification = specification.and(ExpenseSpecification.expenseAtBefore(request.getTo()));
         }
+        if(request.getSearch() != null){
+            specification = specification.and(ExpenseSpecification.hasTitle(request.getSearch()));
+        }
 
-        List<Expense> expenses = expenseRepository.findAll(specification);
-        return expenseMapper.toResponseList(expenses);
+        Pageable customPageable = buildSafePageable(pageable);
+        Page<Expense> expensePage = expenseRepository.findAll(specification, customPageable);
+
+        Page<ExpenseResponse> responsePage = expensePage.map(expenseMapper::toResponse);
+
+        ExpensePageResponse response = ExpensePageResponse.builder()
+                .content(responsePage.getContent())
+                .page(responsePage.getNumber())
+                .size(responsePage.getSize())
+                .totalElements(responsePage.getTotalElements())
+                .totalPages(responsePage.getTotalPages())
+                .first(responsePage.isFirst())
+                .last(responsePage.isLast())
+                .build();
+
+        return response;
     }
 
     @Transactional
@@ -127,5 +151,27 @@ public class ExpenseService {
 
 
         return expenseMapper.toResponse(savedExpense);
+    }
+
+    private Pageable buildSafePageable(Pageable pageable) {
+        List<Sort.Order> orders = new ArrayList<>();
+
+        int pageSize = pageable.getPageSize();
+        if (pageSize > 100) {
+            throw new RuntimeException("Page size not valid "+ pageSize);
+        }
+        if (pageable.getSort().isUnsorted()) {
+            orders.add(Sort.Order.desc(ExpenseSortField.EXPENSE_AT.getEntityField()));
+        } else {
+            for (Sort.Order order : pageable.getSort()) {
+                ExpenseSortField sortField = ExpenseSortField.fromApiName(order.getProperty());
+                orders.add(new Sort.Order( order.getDirection(), sortField.getEntityField()));
+            }
+        }
+
+        orders.add(Sort.Order.desc("id"));
+        Sort sort = Sort.by(orders);
+
+        return PageRequest.of(pageable.getPageNumber(), pageSize, sort);
     }
 }

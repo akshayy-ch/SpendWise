@@ -59,4 +59,14 @@ public final class ExpenseSpecification {
                         beforeDate
                 );
     }
+    public static Specification<Expense> hasTitle(String search){
+        return (root, query, criteriaBuilder) -> {
+            String searchPattern = "%" + search.trim().toLowerCase() + "%";
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("title")),
+                    searchPattern
+            );
+        };
+    }
 }

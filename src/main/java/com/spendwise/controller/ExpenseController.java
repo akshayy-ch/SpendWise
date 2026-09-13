@@ -2,6 +2,7 @@ package com.spendwise.controller;
 
 import com.spendwise.dto.request.expense.CreateExpenseRequest;
 import com.spendwise.dto.request.expense.GetExpenseRequest;
+import com.spendwise.dto.response.expense.ExpensePageResponse;
 import com.spendwise.dto.response.expense.ExpenseResponse;
 import com.spendwise.service.ExpenseService;
 import jakarta.validation.Valid;
@@ -10,7 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 @RestController
@@ -26,8 +28,8 @@ public class ExpenseController {
     }
 
     @GetMapping("/getExpenses")
-    public ResponseEntity<List<ExpenseResponse>> getExpenses(@Valid GetExpenseRequest request){
-        return ResponseEntity.ok(expenseService.getExpenses(request));
+    public ResponseEntity<ExpensePageResponse> getExpenses(@Valid GetExpenseRequest request, Pageable pageable){
+        return ResponseEntity.ok(expenseService.getExpenses(request, pageable));
     }
     @PatchMapping("/{expenseId}/void")
     public ResponseEntity<ExpenseResponse> voidExpense(
