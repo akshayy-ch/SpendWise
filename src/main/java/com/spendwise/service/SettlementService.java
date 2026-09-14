@@ -1,14 +1,19 @@
 package com.spendwise.service;
 
 import com.spendwise.dto.request.settlement.CreateSettlementRequest;
+import com.spendwise.dto.response.income.IncomePageResponse;
+import com.spendwise.dto.response.settlement.SettlementPageResponse;
 import com.spendwise.dto.response.settlement.SettlementResponse;
 import com.spendwise.entity.*;
 import com.spendwise.enums.ExpenseShareStatus;
+import com.spendwise.enums.IncomeSortField;
+import com.spendwise.enums.SettlementSortField;
 import com.spendwise.enums.SettlementStatus;
 import com.spendwise.exception.CategoryExceptions.CategoryDoesNotExist;
 import com.spendwise.exception.ExpenseShareExceptions.AlreadySettledException;
 import com.spendwise.exception.ExpenseShareExceptions.ExpenseShareDoesNotExist;
 import com.spendwise.exception.GroupExceptions.UnauthorizedGroupActionException;
+import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.SettlementExceptions.InvalidSettlementException;
 import com.spendwise.exception.SettlementExceptions.ReceiverNotFound;
 import com.spendwise.exception.SettlementExceptions.SettlementDoesNotExist;
@@ -19,10 +24,15 @@ import com.spendwise.repository.SettlementRepository;
 import com.spendwise.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -106,13 +116,25 @@ public class SettlementService {
         return settlementMapper.toResponse(settlement);
     }
 
-    public List<SettlementResponse> getMySettlements() {
+    public SettlementPageResponse getMySettlements(Pageable pageable) {
 
         UUID currentUserId = currentUserService.getCurrentUserId();
 
-        List<Settlement> settlements = settlementRepository.findAllByPayerIdOrReceiverId(currentUserId, currentUserId);
+        Pageable customPageable = buildSafePageable(pageable);
+        Page<Settlement> settlementPage = settlementRepository.findAllByPayerIdOrReceiverId(currentUserId, currentUserId, customPageable);
+        Page<SettlementResponse> responsePage = settlementPage.map(settlementMapper::toResponse);
 
-        return settlementMapper.toResponseList(settlements);
+        SettlementPageResponse response = SettlementPageResponse.builder()
+                .content(responsePage.getContent())
+                .page(responsePage.getNumber())
+                .size(responsePage.getSize())
+                .totalElements(responsePage.getTotalElements())
+                .totalPages(responsePage.getTotalPages())
+                .first(responsePage.isFirst())
+                .last(responsePage.isLast())
+                .build();
+
+        return response;
     }
 
     public List<SettlementResponse> getSettlementsForShare(UUID expenseShareId) {
@@ -131,5 +153,25 @@ public class SettlementService {
         List<Settlement> settlements = settlementRepository.findAllByExpenseShareId(expenseShareId);
 
         return settlementMapper.toResponseList(settlements);
+    }
+    private Pageable buildSafePageable(Pageable pageable) {
+        List<Sort.Order> orders = new ArrayList<>();
+
+        int pageSize = pageable.getPageSize();
+        if (pageSize > 100) {
+            throw new InvalidPaginationException("Page size not valid: " + pageSize);        }
+        if (pageable.getSort().isUnsorted()) {
+            orders.add(Sort.Order.desc(SettlementSortField.SETTLED_AT.getEntityField()));
+        } else {
+            for (Sort.Order order : pageable.getSort()) {
+                SettlementSortField sortField = SettlementSortField.fromApiName(order.getProperty());
+                orders.add(new Sort.Order( order.getDirection(), sortField.getEntityField()));
+            }
+        }
+
+        orders.add(Sort.Order.desc("id"));
+        Sort sort = Sort.by(orders);
+
+        return PageRequest.of(pageable.getPageNumber(), pageSize, sort);
     }
 }

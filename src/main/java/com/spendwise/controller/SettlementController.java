@@ -1,6 +1,7 @@
 package com.spendwise.controller;
 
 import com.spendwise.dto.request.settlement.CreateSettlementRequest;
+import com.spendwise.dto.response.settlement.SettlementPageResponse;
 import com.spendwise.dto.response.settlement.SettlementResponse;
 import com.spendwise.service.SettlementService;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,9 +33,8 @@ public class SettlementController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<SettlementResponse>> getMySettlements() {
-        List<SettlementResponse> response = settlementService.getMySettlements();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<SettlementPageResponse> getMySettlements(Pageable pageable) {
+        return ResponseEntity.ok(settlementService.getMySettlements(pageable));
     }
 
     @GetMapping("/expense-shares/{expenseShareId}")

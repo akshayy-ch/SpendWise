@@ -16,6 +16,7 @@ import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
 import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
+import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.WalletExceptions.ArchivedWalletException;
 import com.spendwise.exception.WalletExceptions.InvalidAmountException;
 import com.spendwise.exception.WalletExceptions.WalletDoesNotExist;
@@ -158,8 +159,7 @@ public class ExpenseService {
 
         int pageSize = pageable.getPageSize();
         if (pageSize > 100) {
-            throw new RuntimeException("Page size not valid "+ pageSize);
-        }
+            throw new InvalidPaginationException("Page size not valid: " + pageSize);        }
         if (pageable.getSort().isUnsorted()) {
             orders.add(Sort.Order.desc(ExpenseSortField.EXPENSE_AT.getEntityField()));
         } else {

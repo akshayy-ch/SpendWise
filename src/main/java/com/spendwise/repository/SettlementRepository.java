@@ -1,6 +1,7 @@
 package com.spendwise.repository;
 
 import com.spendwise.entity.Settlement;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -16,9 +17,10 @@ public interface SettlementRepository extends JpaRepository<Settlement, UUID> {
 
     List<Settlement> findAllByExpenseShareId(UUID expenseShareId);
 
-    List<Settlement> findAllByPayerIdOrReceiverId(
+    Page<Settlement> findAllByPayerIdOrReceiverId(
             UUID payerId,
-            UUID receiverId
+            UUID receiverId,
+            Pageable pageable
     );
 
     boolean existsByCategoryId(UUID categoryId);

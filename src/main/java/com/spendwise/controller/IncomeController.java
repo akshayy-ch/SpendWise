@@ -2,6 +2,7 @@ package com.spendwise.controller;
 
 import com.spendwise.dto.request.income.CreateIncomeRequest;
 import com.spendwise.dto.request.income.GetIncomeRequest;
+import com.spendwise.dto.response.income.IncomePageResponse;
 import com.spendwise.dto.response.income.IncomeResponse;
 import com.spendwise.service.IncomeService;
 import jakarta.validation.Valid;
@@ -10,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/incomes")
@@ -25,7 +26,7 @@ public class IncomeController {
     }
 
     @GetMapping("/getIncome")
-    public ResponseEntity<List<IncomeResponse>> getIncomes(@Valid GetIncomeRequest request){
-        return ResponseEntity.ok(incomeService.getIncomes(request));
+    public ResponseEntity<IncomePageResponse> getIncomes(@Valid GetIncomeRequest request, Pageable pageable){
+        return ResponseEntity.ok(incomeService.getIncomes(request, pageable));
     }
 }

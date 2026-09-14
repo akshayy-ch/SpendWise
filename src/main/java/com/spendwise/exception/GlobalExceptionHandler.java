@@ -10,6 +10,7 @@ import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
 import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
+import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.WalletExceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -239,5 +240,9 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(DuplicateBudgetCategoryException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateBudgetCategoryException(DuplicateBudgetCategoryException e) {
         return buildErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+    }
+    @ExceptionHandler(InvalidPaginationException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPaginationException(InvalidPaginationException e){
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }

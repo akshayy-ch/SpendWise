@@ -1,6 +1,5 @@
 package com.spendwise.specification;
 
-import com.spendwise.entity.Expense;
 import com.spendwise.entity.Income;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -18,12 +17,15 @@ public class IncomeSpecification {
                 );
     }
 
-    public static Specification<Income> hasSource(String source){
-        return (root, query, criteriaBuilder)->
-                criteriaBuilder.equal(
-                        root.get("source"),
-                        source
-                );
+    public static Specification<Income> hasSource(String source) {
+        return (root, query, criteriaBuilder) -> {
+            String searchPattern = "%" + source.trim().toLowerCase() + "%";
+
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("source")),
+                    searchPattern
+            );
+        };
     }
     public static Specification<Income> incomeAtAfter(OffsetDateTime afterDate) {
 
@@ -41,5 +43,4 @@ public class IncomeSpecification {
                         beforeDate
                 );
     }
-
 }
