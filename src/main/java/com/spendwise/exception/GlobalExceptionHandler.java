@@ -247,11 +247,6 @@ public class GlobalExceptionHandler{
     public ResponseEntity<ErrorResponse> handleInvalidPaginationException(InvalidPaginationException e){
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
-        return buildErrorResponse(HttpStatus.FORBIDDEN, "You do not have permission to access this resource");
-    }
-
     @ExceptionHandler(InvalidRoleChangeException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRoleChangeException(InvalidRoleChangeException e){
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
