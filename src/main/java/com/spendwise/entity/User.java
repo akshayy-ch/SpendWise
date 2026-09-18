@@ -1,4 +1,5 @@
 package com.spendwise.entity;
+import com.spendwise.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,6 +41,11 @@ public class User {
 
     @Column(name = "updated_at", nullable = false, insertable = false)
     private OffsetDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Role role = Role.USER;
 
     public String getPasswordHashForAuth() {
         return passwordHash;

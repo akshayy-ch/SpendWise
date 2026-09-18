@@ -14,10 +14,12 @@ import com.spendwise.enums.GroupStatus;
 import com.spendwise.enums.SplitType;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
 import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
+import com.spendwise.exception.ExpenseShareExceptions.ExpenseShareDoesNotExist;
 import com.spendwise.exception.ExpenseShareExceptions.InvalidSplitException;
 import com.spendwise.exception.GroupExceptions.ArchivedGroupException;
 import com.spendwise.exception.GroupExceptions.GroupDoesNotExist;
 import com.spendwise.exception.GroupExceptions.UnauthorizedGroupActionException;
+import com.spendwise.exception.GroupMemberExceptions.GroupMemberDoesNotExist;
 import com.spendwise.exception.GroupMemberExceptions.InactiveGroupMemberException;
 import com.spendwise.exception.GroupMemberExceptions.NotGroupMemberException;
 import com.spendwise.exception.GroupMemberExceptions.UserDoesNotExist;
@@ -250,9 +252,23 @@ public class ExpenseShareService {
     @Transactional
     public List<ExpenseShareResponse> getExpenseSharesByExpense(UUID expenseId) {
 
-        List<ExpenseShare> shares =
-                expenseShareRepository.findByExpenseId(expenseId);
+        UUID userId = currentUserService.getCurrentUserId();
 
+        User user = userRepository.findById(userId).orElseThrow(()-> new UserDoesNotExist("User does not exist"));
+        Expense expense = expenseRepository.findById(expenseId).orElseThrow(()-> new ExpenseDoesNotExist("Expense does not exist"));
+
+        List<ExpenseShare> shares = expenseShareRepository.findByExpenseId(expenseId);
+        if(shares.isEmpty()){
+            throw new ExpenseShareDoesNotExist("Expense shares not found");
+        }
+
+        if(!expense.getUser().getId().equals(userId)){
+            UUID groupId = shares.get(0).getGroup().getId();
+            GroupMember member = groupMemberRepository.findByIdGroupIdAndIdUserId(groupId, userId).orElseThrow(() -> new GroupMemberDoesNotExist("You are not a member of this group"));
+            if(member.getStatus() != GroupMemberStatus.ACTIVE){
+                throw new UnauthorizedGroupActionException("Group member is inactive");
+            }
+        }
         return shares.stream()
                 .map(this::mapToResponse)
                 .toList();

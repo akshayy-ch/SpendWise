@@ -25,6 +25,10 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     boolean existsByNameAndUserId(String name, UUID userId);
 
+    boolean existsByNameAndIsSystemTrue(String name);
+
+    Optional<Category> findByIdAndIsSystemTrue(UUID categoryId);
+
     @Query("""
     SELECT c
     FROM Category c

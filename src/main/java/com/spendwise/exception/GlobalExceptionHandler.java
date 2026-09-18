@@ -11,6 +11,7 @@ import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
 import com.spendwise.exception.PaginationException.InvalidPaginationException;
+import com.spendwise.exception.UserExceptions.InvalidRoleChangeException;
 import com.spendwise.exception.WalletExceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import com.spendwise.exception.GroupExceptions.*;
 import com.spendwise.exception.GroupMemberExceptions.*;
 import com.spendwise.exception.ExpenseShareExceptions.*;
 import com.spendwise.exception.SettlementExceptions.*;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -234,7 +236,7 @@ public class GlobalExceptionHandler{
 
     @ExceptionHandler(InvalidStartandEndDateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidStartandEndDateException(InvalidStartandEndDateException e){
-        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(DuplicateBudgetCategoryException.class)
@@ -243,6 +245,15 @@ public class GlobalExceptionHandler{
     }
     @ExceptionHandler(InvalidPaginationException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPaginationException(InvalidPaginationException e){
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, "You do not have permission to access this resource");
+    }
+
+    @ExceptionHandler(InvalidRoleChangeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRoleChangeException(InvalidRoleChangeException e){
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }

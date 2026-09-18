@@ -15,6 +15,7 @@ import java.util.UUID;
 public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpecificationExecutor<Expense> {
 
     boolean existsByCategoryIdAndUserId(UUID categoryId, UUID userId);
+    boolean existsByCategoryId(UUID categoryId);
 
     @Query("""
     SELECT COALESCE(SUM(e.amount), 0)

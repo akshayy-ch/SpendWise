@@ -25,10 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
-        System.out.println("AUTH HEADER: " + authHeader);
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("NO BEARER TOKEN");
             filterChain.doFilter(request, response);
             return;
         }
@@ -37,25 +34,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String username = jwtService.extractUsername(jwt);
 
-        System.out.println("USERNAME FROM TOKEN: " + username);
 
         if (username == null) {
-            System.out.println("TOKEN COULD NOT BE PARSED");
             filterChain.doFilter(request, response);
             return;
         }
 
         boolean valid = jwtService.isTokenValid(jwt, username);
 
-        System.out.println("TOKEN VALID: " + valid);
 
         if (valid &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails =
                     spendWiseUserDetailsService.loadUserByUsername(username);
-
-            System.out.println("USER FOUND: " + userDetails.getUsername());
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
@@ -66,7 +58,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            System.out.println("AUTHENTICATION SET");
         }
 
         filterChain.doFilter(request, response);
