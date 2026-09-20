@@ -2,6 +2,7 @@ package com.spendwise.service;
 
 import com.spendwise.dto.request.LoginRequest;
 import com.spendwise.dto.request.RegisterRequest;
+import com.spendwise.dto.request.email.ResendVerificationEmailRequest;
 import com.spendwise.dto.response.LoginResponse;
 import com.spendwise.dto.response.RegisterResponse;
 import com.spendwise.entity.User;
@@ -12,6 +13,7 @@ import com.spendwise.exception.AuthExceptions.EmailAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.PhoneNoAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.UsernameAlreadyExistsException;
 import com.spendwise.exception.EmailExceptions.EmailNotVerifiedException;
+import com.spendwise.exception.GroupMemberExceptions.UserDoesNotExist;
 import com.spendwise.repository.UserRepository;
 import com.spendwise.repository.WalletRepository;
 import com.spendwise.security.JwtService;
@@ -26,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -111,5 +114,30 @@ public class AuthService {
                     .authToken(token)
                     .build();
         }
+    public void resendVerificationEmail(ResendVerificationEmailRequest request) {
+
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
+
+        if (userOptional.isEmpty()) return;
+
+        User user = userOptional.get();
+
+        if (user.isEmailVerified()) return;
+
+        String verificationToken = emailVerificationTokenService.createVerificationToken(user);
+
+        String verificationLink = verificationBaseUrl + "/api/v1/auth/verify-email?token=" + verificationToken;
+
+        emailService.sendEmail(
+                user.getEmail(),
+                "Verify your SpendWise email",
+                "Hi " + user.getName() + ",\n\n"
+                        + "Please verify your email by clicking the link below:\n\n"
+                        + verificationLink + "\n\n"
+                        + "This link will expire in 30 minutes.\n\n"
+                        + "Thanks,\n"
+                        + "SpendWise"
+        );
+    }
 }
 

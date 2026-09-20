@@ -2,6 +2,7 @@ package com.spendwise.controller;
 
 import com.spendwise.dto.request.LoginRequest;
 import com.spendwise.dto.request.RegisterRequest;
+import com.spendwise.dto.request.email.ResendVerificationEmailRequest;
 import com.spendwise.dto.response.LoginResponse;
 import com.spendwise.dto.response.RegisterResponse;
 import com.spendwise.service.AuthService;
@@ -39,5 +40,13 @@ public class AuthController {
         emailVerificationTokenService.verifyToken(token);
 
         return ResponseEntity.ok("Email verified successfully");
+    }
+    @PostMapping("/resend-verification")
+    public ResponseEntity<String> resendVerificationEmail(
+            @Valid @RequestBody ResendVerificationEmailRequest request) {
+
+        authService.resendVerificationEmail(request);
+
+        return ResponseEntity.ok("If an account exists with this email and is not yet verified, " + "a verification email has been sent.");
     }
 }
