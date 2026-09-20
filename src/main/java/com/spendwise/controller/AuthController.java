@@ -5,15 +5,13 @@ import com.spendwise.dto.request.RegisterRequest;
 import com.spendwise.dto.response.LoginResponse;
 import com.spendwise.dto.response.RegisterResponse;
 import com.spendwise.service.AuthService;
+import com.spendwise.service.EmailVerificationTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final EmailVerificationTokenService emailVerificationTokenService;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request){
@@ -33,5 +32,12 @@ public class AuthController {
         log.info("Login request received");
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+
+        emailVerificationTokenService.verifyToken(token);
+
+        return ResponseEntity.ok("Email verified successfully");
     }
 }

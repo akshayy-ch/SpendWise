@@ -47,6 +47,10 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
     public String getPasswordHashForAuth() {
         return passwordHash;
     }

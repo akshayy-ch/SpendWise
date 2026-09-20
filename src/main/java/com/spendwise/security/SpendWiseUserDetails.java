@@ -21,6 +21,9 @@ public class SpendWiseUserDetails implements UserDetails {
                 new SimpleGrantedAuthority("ROLE_"+user.getRole().name())
         );
     }
+    public boolean isEmailVerified() {
+        return user.isEmailVerified();
+    }
 
     @Override
     public String getPassword() {

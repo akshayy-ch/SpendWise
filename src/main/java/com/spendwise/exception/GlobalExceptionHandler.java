@@ -6,6 +6,10 @@ import com.spendwise.exception.AuthExceptions.PhoneNoAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.UsernameAlreadyExistsException;
 import com.spendwise.exception.BudgetExceptions.*;
 import com.spendwise.exception.CategoryExceptions.*;
+import com.spendwise.exception.EmailExceptions.EmailNotVerifiedException;
+import com.spendwise.exception.EmailExceptions.EmailVerificationTokenAlreadyUsedException;
+import com.spendwise.exception.EmailExceptions.EmailVerificationTokenExpiredException;
+import com.spendwise.exception.EmailExceptions.EmailVerificationTokenInvalidException;
 import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
 import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
@@ -250,5 +254,21 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(InvalidRoleChangeException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRoleChangeException(InvalidRoleChangeException e){
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(EmailVerificationTokenAlreadyUsedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailVerificationTokenAlreadyUsed(EmailVerificationTokenAlreadyUsedException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(EmailVerificationTokenInvalidException.class)
+    public ResponseEntity<ErrorResponse> handleEmailVerificationTokenInvalid(EmailVerificationTokenInvalidException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(EmailVerificationTokenExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleEmailVerificationTokenExpired(EmailVerificationTokenExpiredException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerified(EmailNotVerifiedException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 }

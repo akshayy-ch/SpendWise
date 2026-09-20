@@ -11,18 +11,20 @@ import com.spendwise.enums.WalletType;
 import com.spendwise.exception.AuthExceptions.EmailAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.PhoneNoAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.UsernameAlreadyExistsException;
+import com.spendwise.exception.EmailExceptions.EmailNotVerifiedException;
 import com.spendwise.repository.UserRepository;
 import com.spendwise.repository.WalletRepository;
 import com.spendwise.security.JwtService;
+import com.spendwise.security.SpendWiseUserDetails;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 
 @Slf4j
@@ -34,6 +36,11 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final WalletRepository walletRepository;
     private final JwtService jwtService;
+    private final EmailVerificationTokenService emailVerificationTokenService;
+    private final EmailService emailService;
+
+    @Value("${app.verification.base-url}")
+    private String verificationBaseUrl;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request){
@@ -56,6 +63,18 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(createdUser);
+        String verificationToken = emailVerificationTokenService.createVerificationToken(savedUser);
+        String verificationLink = verificationBaseUrl + "/api/v1/auth/verify-email?token=" + verificationToken;
+        emailService.sendEmail(
+                savedUser.getEmail(),
+                "Verify your SpendWise email",
+                "Hi " + savedUser.getName() + ",\n\n"
+                        + "Please verify your email by clicking the link below:\n\n"
+                        + verificationLink + "\n\n"
+                        + "This link will expire in 30 minutes.\n\n"
+                        + "Thanks,\n"
+                        + "SpendWise"
+        );
         Wallet wallet = Wallet.builder()
                 .user(savedUser)
                 .walletName("Cash")
@@ -77,14 +96,20 @@ public class AuthService {
                 .amount(wallet.getCurrentBalance())
                 .build();
     }
-    public LoginResponse login(LoginRequest request){
-        log.info("Login request with username={}", request.getUsername());
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword());
-        Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
-        String token = jwtService.generateToken(authentication.getName());
-        return LoginResponse.builder()
-                .authToken(token)
-                .build();
-    }
+        public LoginResponse login(LoginRequest request){
+            log.info("Login request with username={}", request.getUsername());
+            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword());
+            Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+            SpendWiseUserDetails userDetails = (SpendWiseUserDetails) authentication.getPrincipal();
+            if (!userDetails.isEmailVerified()) {
+                throw new EmailNotVerifiedException(
+                        "Please verify your email before logging in"
+                );
+            }
+            String token = jwtService.generateToken(authentication.getName());
+            return LoginResponse.builder()
+                    .authToken(token)
+                    .build();
+        }
 }
 
