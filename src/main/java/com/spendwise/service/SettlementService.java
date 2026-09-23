@@ -5,11 +5,9 @@ import com.spendwise.dto.response.income.IncomePageResponse;
 import com.spendwise.dto.response.settlement.SettlementPageResponse;
 import com.spendwise.dto.response.settlement.SettlementResponse;
 import com.spendwise.entity.*;
-import com.spendwise.enums.ExpenseShareStatus;
-import com.spendwise.enums.IncomeSortField;
-import com.spendwise.enums.SettlementSortField;
-import com.spendwise.enums.SettlementStatus;
+import com.spendwise.enums.*;
 import com.spendwise.exception.CategoryExceptions.CategoryDoesNotExist;
+import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseShareExceptions.AlreadySettledException;
 import com.spendwise.exception.ExpenseShareExceptions.ExpenseShareDoesNotExist;
 import com.spendwise.exception.GroupExceptions.UnauthorizedGroupActionException;
@@ -17,11 +15,10 @@ import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.SettlementExceptions.InvalidSettlementException;
 import com.spendwise.exception.SettlementExceptions.ReceiverNotFound;
 import com.spendwise.exception.SettlementExceptions.SettlementDoesNotExist;
+import com.spendwise.exception.WalletExceptions.ArchivedWalletException;
+import com.spendwise.exception.WalletExceptions.WalletDoesNotExist;
 import com.spendwise.mapper.SettlementMapper;
-import com.spendwise.repository.CategoryRepository;
-import com.spendwise.repository.ExpenseShareRepository;
-import com.spendwise.repository.SettlementRepository;
-import com.spendwise.repository.UserRepository;
+import com.spendwise.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,38 +43,63 @@ public class SettlementService {
     private final CurrentUserService currentUserService;
     private final SettlementMapper settlementMapper;
     private final CategoryRepository categoryRepository;
+    private final WalletRepository walletRepository;
 
     @Transactional
-    public SettlementResponse createSettlement(UUID expenseShareId, CreateSettlementRequest request) {
+    public SettlementResponse createSettlement(
+            UUID expenseShareId,
+            CreateSettlementRequest request
+    ) {
 
         UUID currentUserId = currentUserService.getCurrentUserId();
-        ExpenseShare expenseShare =expenseShareRepository.findById(expenseShareId).orElseThrow(() ->new ExpenseShareDoesNotExist("Expense share not found"));
+
+        ExpenseShare expenseShare = expenseShareRepository.findByIdForUpdate(expenseShareId).orElseThrow(() -> new ExpenseShareDoesNotExist("Expense share not found"));
+
         if (!expenseShare.getUser().getId().equals(currentUserId)) {
-            throw new UnauthorizedGroupActionException("Only the person who owes the share can settle it");
+            throw new UnauthorizedGroupActionException(
+                    "Only the person who owes the share can settle it"
+            );
         }
+
         if (expenseShare.getRemainingAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new AlreadySettledException("This expense share is already settled");
         }
 
+        Wallet wallet = walletRepository.findByWalletNameAndUserId(request.getWalletName(), currentUserId).orElseThrow(() -> new WalletDoesNotExist("Wallet does not exist"));
+
+        if (wallet.getStatus() != WalletStatus.ACTIVE) {
+            throw new ArchivedWalletException("Wallet is not active");
+        }
+
         User receiver = userRepository.findById(request.getReceiverId()).orElseThrow(() -> new ReceiverNotFound("Receiver not found"));
 
-        Category category = categoryRepository
-                .findAvailableCategory(request.getCategoryName(), currentUserId)
-                .orElseThrow(() ->
-                        new CategoryDoesNotExist("Category does not exist" + request.getCategoryName()));
+        Category category = categoryRepository.findAvailableCategory(request.getCategoryName(), currentUserId).orElseThrow(() -> new CategoryDoesNotExist("Category does not exist: " + request.getCategoryName()));
+
         Expense expense = expenseShare.getExpense();
+
         if (!expense.getUser().getId().equals(receiver.getId())) {
             throw new InvalidSettlementException("Receiver must be the original expense payer");
         }
+
         BigDecimal amount = request.getAmount();
 
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidSettlementException("Settlement amount must be greater than zero");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidSettlementException(
+                    "Settlement amount must be greater than zero"
+            );
         }
 
         if (amount.compareTo(expenseShare.getRemainingAmount()) > 0) {
             throw new InvalidSettlementException("Settlement amount cannot exceed the remaining amount");
         }
+
+        if (wallet.getCurrentBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException("Insufficient wallet balance");
+        }
+
+        wallet.setCurrentBalance(
+                wallet.getCurrentBalance().subtract(amount)
+        );
 
         Settlement settlement = Settlement.builder()
                 .amount(amount)
@@ -87,9 +109,11 @@ public class SettlementService {
                 .settledAt(OffsetDateTime.now())
                 .status(SettlementStatus.SETTLED)
                 .category(category)
+                .wallet(wallet)
                 .build();
 
-        BigDecimal remainingAmount = expenseShare.getRemainingAmount().subtract(amount);
+        BigDecimal remainingAmount =
+                expenseShare.getRemainingAmount().subtract(amount);
 
         expenseShare.setRemainingAmount(remainingAmount);
 
@@ -97,9 +121,12 @@ public class SettlementService {
             expenseShare.setStatus(ExpenseShareStatus.SETTLED);
         }
 
-        Settlement savedSettlement = settlementRepository.save(settlement);
+        Settlement savedSettlement =
+                settlementRepository.save(settlement);
 
         expenseShareRepository.save(expenseShare);
+
+        walletRepository.save(wallet);
 
         return settlementMapper.toResponse(savedSettlement);
     }

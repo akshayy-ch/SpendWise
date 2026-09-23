@@ -27,4 +27,7 @@ public class CreateSettlementRequest {
     @Size(min = 3, max = 50)
     private String categoryName;
 
+    @NotBlank
+    @Size(min = 3, max = 50)
+    private String walletName;
 }

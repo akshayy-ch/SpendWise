@@ -27,7 +27,7 @@ public class ExpenseShare {
     private BigDecimal originalAmount;
 
     @Column(name = "remaining_amount", nullable = false, precision = 12, scale = 2)
-    @Check(constraints = "remaining_amount >= 0")
+    @Check(constraints = "remaining_amount >= 0 AND remaining_amount <= original_amount")
     private BigDecimal remainingAmount;
 
     @Enumerated(EnumType.STRING)

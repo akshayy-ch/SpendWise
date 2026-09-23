@@ -1,8 +1,11 @@
 package com.spendwise.repository;
 
+import com.spendwise.entity.Expense;
 import com.spendwise.entity.ExpenseShare;
 import com.spendwise.enums.ExpenseShareStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,14 +27,9 @@ public interface ExpenseShareRepository
             UUID expenseId
     );
 
-    List<ExpenseShare> findAllByUserId(
-            UUID userId
-    );
-
-    List<ExpenseShare> findAllByUserIdAndStatus(
-            UUID userId,
-            ExpenseShareStatus status
-    );
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM ExpenseShare e WHERE e.id = :expenseShareId")
+    Optional<ExpenseShare> findByIdForUpdate(@Param("expenseShareId")UUID expenseShareId);
 
     @Query("""
     SELECT CASE WHEN COUNT(es) > 0 THEN true ELSE false END
