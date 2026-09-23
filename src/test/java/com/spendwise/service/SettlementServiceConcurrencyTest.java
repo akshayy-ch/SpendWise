@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -72,23 +73,36 @@ class SettlementServiceConcurrencyTest {
     @Autowired
     private GroupMemberRepository groupMemberRepository;
 
+
     private User debtor;
     private User payer;
 
     private Wallet wallet;
-
     private Wallet payerWallet;
 
     private Category category;
+
     private Expense expense;
+    private Expense secondExpense;
+
     private ExpenseShare expenseShare;
+    private ExpenseShare secondExpenseShare;
+
     private Group group;
+
 
     @BeforeEach
     void setUp() {
 
         String uniqueId = UUID.randomUUID().toString();
         String shortId = uniqueId.substring(0, 8);
+
+
+        /*
+         * ---------------------------------------------------------
+         * DEBTOR
+         * ---------------------------------------------------------
+         */
 
         debtor = User.builder()
                 .username("settlement_debtor_" + uniqueId)
@@ -97,7 +111,15 @@ class SettlementServiceConcurrencyTest {
                 .build();
 
         debtor.updatePasswordHash("test-password");
+
         debtor = userRepository.save(debtor);
+
+
+        /*
+         * ---------------------------------------------------------
+         * PAYER / ORIGINAL EXPENSE OWNER
+         * ---------------------------------------------------------
+         */
 
         payer = User.builder()
                 .username("settlement_payer_" + uniqueId)
@@ -106,7 +128,15 @@ class SettlementServiceConcurrencyTest {
                 .build();
 
         payer.updatePasswordHash("test-password");
+
         payer = userRepository.save(payer);
+
+
+        /*
+         * ---------------------------------------------------------
+         * PAYER WALLET
+         * ---------------------------------------------------------
+         */
 
         payerWallet = Wallet.builder()
                 .walletName("PayerWallet-" + shortId)
@@ -118,6 +148,13 @@ class SettlementServiceConcurrencyTest {
 
         payerWallet = walletRepository.save(payerWallet);
 
+
+        /*
+         * ---------------------------------------------------------
+         * GROUP
+         * ---------------------------------------------------------
+         */
+
         group = Group.builder()
                 .name("SettlementTest-" + shortId)
                 .description("Concurrency test")
@@ -126,6 +163,13 @@ class SettlementServiceConcurrencyTest {
                 .build();
 
         group = groupRepository.save(group);
+
+
+        /*
+         * ---------------------------------------------------------
+         * GROUP MEMBER
+         * ---------------------------------------------------------
+         */
 
         GroupMemberId groupMemberId =
                 new GroupMemberId(
@@ -142,6 +186,16 @@ class SettlementServiceConcurrencyTest {
 
         groupMemberRepository.save(groupMember);
 
+
+        /*
+         * ---------------------------------------------------------
+         * DEBTOR WALLET
+         *
+         * This is the wallet that will actually be used
+         * for the settlements.
+         * ---------------------------------------------------------
+         */
+
         wallet = Wallet.builder()
                 .walletName("SettlementWallet-" + shortId)
                 .type(WalletType.CASH)
@@ -152,9 +206,23 @@ class SettlementServiceConcurrencyTest {
 
         wallet = walletRepository.save(wallet);
 
+
+        /*
+         * ---------------------------------------------------------
+         * CATEGORY
+         * ---------------------------------------------------------
+         */
+
         category = categoryRepository
                 .findByNameAndIsSystemTrue("Food")
                 .orElseThrow();
+
+
+        /*
+         * ---------------------------------------------------------
+         * FIRST EXPENSE
+         * ---------------------------------------------------------
+         */
 
         expense = Expense.builder()
                 .status(ExpenseStatus.ACTIVE)
@@ -168,6 +236,16 @@ class SettlementServiceConcurrencyTest {
 
         expense = expenseRepository.save(expense);
 
+
+        /*
+         * ---------------------------------------------------------
+         * FIRST EXPENSE SHARE
+         * ---------------------------------------------------------
+         *
+         * Debtor owes payer 100.
+         * ---------------------------------------------------------
+         */
+
         expenseShare = ExpenseShare.builder()
                 .expense(expense)
                 .user(debtor)
@@ -179,8 +257,54 @@ class SettlementServiceConcurrencyTest {
 
         expenseShare = expenseShareRepository.save(expenseShare);
 
+
+        /*
+         * ---------------------------------------------------------
+         * SECOND EXPENSE
+         * ---------------------------------------------------------
+         */
+
+        secondExpense = Expense.builder()
+                .status(ExpenseStatus.ACTIVE)
+                .title("Second Settlement Concurrency Expense")
+                .amount(new BigDecimal("100.00"))
+                .expenseAt(OffsetDateTime.now())
+                .user(payer)
+                .wallet(payerWallet)
+                .category(category)
+                .build();
+
+        secondExpense = expenseRepository.save(secondExpense);
+
+
+        /*
+         * ---------------------------------------------------------
+         * SECOND EXPENSE SHARE
+         * ---------------------------------------------------------
+         */
+
+        secondExpenseShare = ExpenseShare.builder()
+                .expense(secondExpense)
+                .user(debtor)
+                .group(group)
+                .originalAmount(new BigDecimal("100.00"))
+                .remainingAmount(new BigDecimal("100.00"))
+                .status(ExpenseShareStatus.PENDING)
+                .build();
+
+        secondExpenseShare =
+                expenseShareRepository.save(secondExpenseShare);
+
+
+        /*
+         * ---------------------------------------------------------
+         * DEFAULT TEST THREAD AUTHENTICATION
+         * ---------------------------------------------------------
+         */
+
         setAuthentication();
     }
+
 
     private void setAuthentication() {
 
@@ -199,8 +323,27 @@ class SettlementServiceConcurrencyTest {
                 .setAuthentication(authentication);
     }
 
+
+    /*
+     * =========================================================
+     * EXISTING CONCURRENCY TEST
+     * =========================================================
+     *
+     * Two transactions attempt to settle the SAME
+     * ExpenseShare simultaneously.
+     *
+     * Expected:
+     *
+     * 1 succeeds
+     * 1 fails
+     *
+     * This verifies the ExpenseShare pessimistic lock.
+     * =========================================================
+     */
+
     @Test
-    void concurrentSettlement_shouldSettleOnlyOnce() throws Exception {
+    void concurrentSettlement_shouldSettleOnlyOnce()
+            throws Exception {
 
         CreateSettlementRequest firstRequest =
                 CreateSettlementRequest.builder()
@@ -210,6 +353,7 @@ class SettlementServiceConcurrencyTest {
                         .categoryName(category.getName())
                         .build();
 
+
         CreateSettlementRequest secondRequest =
                 CreateSettlementRequest.builder()
                         .receiverId(payer.getId())
@@ -218,16 +362,20 @@ class SettlementServiceConcurrencyTest {
                         .categoryName(category.getName())
                         .build();
 
+
         ExecutorService executor =
                 Executors.newFixedThreadPool(2);
 
+
         CountDownLatch startLatch =
                 new CountDownLatch(1);
+
 
         Future<?> first =
                 executor.submit(() -> {
 
                     try {
+
                         startLatch.await();
 
                         setAuthentication();
@@ -238,14 +386,17 @@ class SettlementServiceConcurrencyTest {
                         );
 
                     } catch (Exception e) {
+
                         throw new RuntimeException(e);
                     }
                 });
+
 
         Future<?> second =
                 executor.submit(() -> {
 
                     try {
+
                         startLatch.await();
 
                         setAuthentication();
@@ -256,59 +407,79 @@ class SettlementServiceConcurrencyTest {
                         );
 
                     } catch (Exception e) {
+
                         throw new RuntimeException(e);
                     }
                 });
+
 
         startLatch.countDown();
 
         executor.shutdown();
 
+
         int successCount = 0;
         int failureCount = 0;
 
+
         try {
+
             first.get();
+
             successCount++;
+
         } catch (ExecutionException e) {
+
             failureCount++;
         }
 
+
         try {
+
             second.get();
+
             successCount++;
+
         } catch (ExecutionException e) {
+
             failureCount++;
         }
+
 
         assertEquals(1, successCount);
 
         assertEquals(1, failureCount);
+
 
         ExpenseShare finalShare =
                 expenseShareRepository
                         .findById(expenseShare.getId())
                         .orElseThrow();
 
+
         assertEquals(
                 new BigDecimal("30.00"),
                 finalShare.getRemainingAmount()
         );
+
 
         assertEquals(
                 ExpenseShareStatus.PENDING,
                 finalShare.getStatus()
         );
 
+
         Wallet finalWallet =
                 walletRepository
                         .findById(wallet.getId())
                         .orElseThrow();
 
+
         assertEquals(
                 new BigDecimal("130.00"),
                 finalWallet.getCurrentBalance()
         );
+
 
         long settlementCount =
                 settlementRepository
@@ -317,6 +488,234 @@ class SettlementServiceConcurrencyTest {
                         )
                         .size();
 
+
         assertEquals(1, settlementCount);
+    }
+
+
+    /*
+     * =========================================================
+     * DEADLOCK / LOCK ORDER TEST
+     * =========================================================
+     *
+     * Two transactions operate on DIFFERENT ExpenseShares
+     * but use the SAME wallet.
+     *
+     * Expected lock order:
+     *
+     * Transaction 1:
+     *
+     *      ExpenseShare A
+     *             ↓
+     *          Wallet
+     *
+     *
+     * Transaction 2:
+     *
+     *      ExpenseShare B
+     *             ↓
+     *          Wallet
+     *
+     *
+     * Both transactions therefore acquire locks in the
+     * same direction.
+     *
+     * The important assertion is that BOTH transactions
+     * finish within the timeout.
+     *
+     * If there is a circular lock dependency, one or both
+     * futures could remain blocked and the test would fail
+     * with a timeout.
+     * =========================================================
+     */
+
+    @Test
+    void concurrentSettlementsOnDifferentShares_shouldNotDeadlock()
+            throws Exception {
+
+        CreateSettlementRequest firstRequest =
+                CreateSettlementRequest.builder()
+                        .receiverId(payer.getId())
+                        .amount(new BigDecimal("50.00"))
+                        .walletName(wallet.getWalletName())
+                        .categoryName(category.getName())
+                        .build();
+
+
+        CreateSettlementRequest secondRequest =
+                CreateSettlementRequest.builder()
+                        .receiverId(payer.getId())
+                        .amount(new BigDecimal("50.00"))
+                        .walletName(wallet.getWalletName())
+                        .categoryName(category.getName())
+                        .build();
+
+
+        ExecutorService executor =
+                Executors.newFixedThreadPool(2);
+
+
+        CountDownLatch startLatch =
+                new CountDownLatch(1);
+
+
+        Future<?> first =
+                executor.submit(() -> {
+
+                    try {
+
+                        startLatch.await();
+
+                        setAuthentication();
+
+                        return settlementService.createSettlement(
+                                expenseShare.getId(),
+                                firstRequest
+                        );
+
+                    } catch (Exception e) {
+
+                        throw new RuntimeException(e);
+                    }
+                });
+
+
+        Future<?> second =
+                executor.submit(() -> {
+
+                    try {
+
+                        startLatch.await();
+
+                        setAuthentication();
+
+                        return settlementService.createSettlement(
+                                secondExpenseShare.getId(),
+                                secondRequest
+                        );
+
+                    } catch (Exception e) {
+
+                        throw new RuntimeException(e);
+                    }
+                });
+
+
+        /*
+         * Release both threads at approximately the same time.
+         */
+
+        startLatch.countDown();
+
+
+        /*
+         * Each transaction must complete within 10 seconds.
+         *
+         * A timeout here indicates that the transactions
+         * may be stuck waiting on locks.
+         */
+
+        first.get(10, TimeUnit.SECONDS);
+
+        second.get(10, TimeUnit.SECONDS);
+
+
+        executor.shutdown();
+
+
+        /*
+         * ---------------------------------------------------------
+         * VERIFY FIRST EXPENSE SHARE
+         * ---------------------------------------------------------
+         */
+
+        ExpenseShare finalFirstShare =
+                expenseShareRepository
+                        .findById(expenseShare.getId())
+                        .orElseThrow();
+
+
+        assertEquals(
+                new BigDecimal("50.00"),
+                finalFirstShare.getRemainingAmount()
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * VERIFY SECOND EXPENSE SHARE
+         * ---------------------------------------------------------
+         */
+
+        ExpenseShare finalSecondShare =
+                expenseShareRepository
+                        .findById(secondExpenseShare.getId())
+                        .orElseThrow();
+
+
+        assertEquals(
+                new BigDecimal("50.00"),
+                finalSecondShare.getRemainingAmount()
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * VERIFY WALLET
+         * ---------------------------------------------------------
+         *
+         * Initial balance = 200
+         *
+         * Settlement 1 = -50
+         * Settlement 2 = -50
+         *
+         * Final balance = 100
+         * ---------------------------------------------------------
+         */
+
+        Wallet finalWallet =
+                walletRepository
+                        .findById(wallet.getId())
+                        .orElseThrow();
+
+
+        assertEquals(
+                new BigDecimal("100.00"),
+                finalWallet.getCurrentBalance()
+        );
+
+
+        /*
+         * ---------------------------------------------------------
+         * VERIFY FIRST SETTLEMENT
+         * ---------------------------------------------------------
+         */
+
+        long firstSettlementCount =
+                settlementRepository
+                        .findAllByExpenseShareId(
+                                expenseShare.getId()
+                        )
+                        .size();
+
+
+        assertEquals(1, firstSettlementCount);
+
+
+        /*
+         * ---------------------------------------------------------
+         * VERIFY SECOND SETTLEMENT
+         * ---------------------------------------------------------
+         */
+
+        long secondSettlementCount =
+                settlementRepository
+                        .findAllByExpenseShareId(
+                                secondExpenseShare.getId()
+                        )
+                        .size();
+
+
+        assertEquals(1, secondSettlementCount);
     }
 }
