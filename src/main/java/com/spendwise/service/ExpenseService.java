@@ -130,7 +130,7 @@ public class ExpenseService {
 
         UUID currentUserId = currentUserService.getCurrentUserId();
 
-        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseDoesNotExist("Expense not found"));
+        Expense expense = expenseRepository.findByIdForUpdate(expenseId).orElseThrow(() -> new ExpenseDoesNotExist("Expense not found"));
 
         if (!expense.getUser().getId().equals(currentUserId)) {
             throw new UnauthorizedExpenseActionException("Only the expense creator can void the expense");
@@ -142,7 +142,9 @@ public class ExpenseService {
 
         expense.setStatus(ExpenseStatus.VOIDED);
 
-        Wallet wallet = expense.getWallet();
+        Wallet wallet = walletRepository.findByWalletNameAndUserId(
+                        expense.getWallet().getWalletName(),
+                        currentUserId).orElseThrow(()-> new WalletDoesNotExist("Wallet does not exist"));
 
         wallet.setCurrentBalance(
                 wallet.getCurrentBalance().add(expense.getAmount())

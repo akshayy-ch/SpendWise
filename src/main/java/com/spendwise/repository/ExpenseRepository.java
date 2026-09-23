@@ -1,21 +1,28 @@
 package com.spendwise.repository;
 
 import com.spendwise.entity.Expense;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpecificationExecutor<Expense> {
 
     boolean existsByCategoryIdAndUserId(UUID categoryId, UUID userId);
     boolean existsByCategoryId(UUID categoryId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM Expense e WHERE e.id = :expenseId")
+    Optional<Expense> findByIdForUpdate(@Param("expenseId") UUID expenseId);
 
     @Query("""
     SELECT COALESCE(SUM(e.amount), 0)
