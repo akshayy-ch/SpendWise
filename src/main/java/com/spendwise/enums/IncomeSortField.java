@@ -1,5 +1,6 @@
 package com.spendwise.enums;
 
+import com.spendwise.exception.Income.InvalidIncomeSortFieldException;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -21,6 +22,6 @@ public enum IncomeSortField {
         return Arrays.stream(values())
                 .filter(f -> f.apiName.equalsIgnoreCase(apiName))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException(apiName));
+                .orElseThrow(() -> new InvalidIncomeSortFieldException(apiName));
     }
 }

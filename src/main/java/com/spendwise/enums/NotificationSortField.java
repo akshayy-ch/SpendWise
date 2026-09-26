@@ -1,5 +1,6 @@
 package com.spendwise.enums;
 
+import com.spendwise.exception.NotificationExceptions.InvalidNotificationSortFieldException;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -20,6 +21,6 @@ public enum NotificationSortField {
         return Arrays.stream(values())
                 .filter(f -> f.apiName.equalsIgnoreCase(apiName))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException(apiName));
+                .orElseThrow(() -> new InvalidNotificationSortFieldException(apiName));
     }
 }

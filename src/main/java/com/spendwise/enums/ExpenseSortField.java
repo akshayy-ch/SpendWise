@@ -1,5 +1,6 @@
 package com.spendwise.enums;
 
+import com.spendwise.exception.ExpenseException.InvalidExpenseSortFieldException;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -21,7 +22,7 @@ public enum ExpenseSortField {
         return Arrays.stream(values())
                 .filter(f -> f.apiName.equalsIgnoreCase(apiName))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException(apiName));
+                .orElseThrow(() -> new InvalidExpenseSortFieldException(apiName));
     }
 
 }

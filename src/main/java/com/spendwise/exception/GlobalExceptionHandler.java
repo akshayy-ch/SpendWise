@@ -10,10 +10,9 @@ import com.spendwise.exception.EmailExceptions.EmailNotVerifiedException;
 import com.spendwise.exception.EmailExceptions.EmailVerificationTokenAlreadyUsedException;
 import com.spendwise.exception.EmailExceptions.EmailVerificationTokenExpiredException;
 import com.spendwise.exception.EmailExceptions.EmailVerificationTokenInvalidException;
-import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
-import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
-import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
-import com.spendwise.exception.ExpenseException.VoidedExpenseException;
+import com.spendwise.exception.ExpenseException.*;
+import com.spendwise.exception.Income.InvalidIncomeSortFieldException;
+import com.spendwise.exception.NotificationExceptions.InvalidNotificationSortFieldException;
 import com.spendwise.exception.NotificationExceptions.NotificationDoesNotExistException;
 import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.UserExceptions.InvalidRoleChangeException;
@@ -275,5 +274,21 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(NotificationDoesNotExistException.class)
     public ResponseEntity<ErrorResponse> handleNotificationDoesNotExistException(NotificationDoesNotExistException e){
         return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+    @ExceptionHandler(InvalidNotificationSortFieldException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidNotificationSortFieldException(InvalidNotificationSortFieldException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(InvalidExpenseSortFieldException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidExpenseSortFieldException(InvalidExpenseSortFieldException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(InvalidIncomeSortFieldException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidIncomeSortFieldException(InvalidIncomeSortFieldException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(InvalidSettlementSortFieldException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSettlementSortFieldException(InvalidSettlementSortFieldException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 }

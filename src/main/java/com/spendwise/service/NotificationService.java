@@ -41,6 +41,7 @@ public class NotificationService {
                 .build();
         Notification savedNotification = notificationRepository.save(notification);
         NotificationResponse response = NotificationResponse.builder()
+                .id(savedNotification.getId())
                 .type(savedNotification.getType())
                 .title(savedNotification.getTitle())
                 .message(savedNotification.getMessage())
@@ -84,6 +85,7 @@ public class NotificationService {
         return notificationRepository.countByRecipientIdAndIsReadFalse(userId);
     }
 
+    @Transactional
     public void markAsRead(UUID notificationId) {
 
         UUID userId = currentUserService.getCurrentUserId();
