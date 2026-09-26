@@ -17,11 +17,15 @@ import com.spendwise.exception.NotificationExceptions.NotificationDoesNotExistEx
 import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.UserExceptions.InvalidRoleChangeException;
 import com.spendwise.exception.WalletExceptions.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.spendwise.exception.GroupExceptions.*;
@@ -29,6 +33,7 @@ import com.spendwise.exception.GroupMemberExceptions.*;
 import com.spendwise.exception.ExpenseShareExceptions.*;
 import com.spendwise.exception.SettlementExceptions.*;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -230,7 +235,7 @@ public class GlobalExceptionHandler{
 
     @ExceptionHandler(BudgetNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleBudgetNotFoundException(BudgetNotFoundException e){
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(InvalidBudgetLimitException.class)
@@ -290,5 +295,29 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(InvalidSettlementSortFieldException.class)
     public ResponseEntity<ErrorResponse> handleInvalidSettlementSortFieldException(InvalidSettlementSortFieldException e) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed request body");
+    }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid value for parameter: " + e.getName());
+    }
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException e) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Missing required parameter: " + e.getParameterName());
+    }
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not supported for this endpoint");
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+    }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        return buildErrorResponse(HttpStatus.CONFLICT, "The request conflicts with existing data");
     }
 }
