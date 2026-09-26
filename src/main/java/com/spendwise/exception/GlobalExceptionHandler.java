@@ -14,6 +14,7 @@ import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
 import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
 import com.spendwise.exception.ExpenseException.UnauthorizedExpenseActionException;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
+import com.spendwise.exception.NotificationExceptions.NotificationDoesNotExistException;
 import com.spendwise.exception.PaginationException.InvalidPaginationException;
 import com.spendwise.exception.UserExceptions.InvalidRoleChangeException;
 import com.spendwise.exception.WalletExceptions.*;
@@ -270,5 +271,9 @@ public class GlobalExceptionHandler{
     @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ErrorResponse> handleEmailNotVerified(EmailNotVerifiedException ex) {
         return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+    @ExceptionHandler(NotificationDoesNotExistException.class)
+    public ResponseEntity<ErrorResponse> handleNotificationDoesNotExistException(NotificationDoesNotExistException e){
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
     }
 }

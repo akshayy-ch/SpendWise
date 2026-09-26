@@ -7,11 +7,7 @@ import com.spendwise.entity.ExpenseShare;
 import com.spendwise.entity.Group;
 import com.spendwise.entity.GroupMember;
 import com.spendwise.entity.User;
-import com.spendwise.enums.ExpenseShareStatus;
-import com.spendwise.enums.ExpenseStatus;
-import com.spendwise.enums.GroupMemberStatus;
-import com.spendwise.enums.GroupStatus;
-import com.spendwise.enums.SplitType;
+import com.spendwise.enums.*;
 import com.spendwise.exception.ExpenseException.VoidedExpenseException;
 import com.spendwise.exception.ExpenseException.ExpenseDoesNotExist;
 import com.spendwise.exception.ExpenseShareExceptions.ExpenseShareDoesNotExist;
@@ -24,11 +20,7 @@ import com.spendwise.exception.GroupMemberExceptions.InactiveGroupMemberExceptio
 import com.spendwise.exception.GroupMemberExceptions.NotGroupMemberException;
 import com.spendwise.exception.GroupMemberExceptions.UserDoesNotExist;
 import com.spendwise.mapper.ExpenseShareMapper;
-import com.spendwise.repository.ExpenseRepository;
-import com.spendwise.repository.ExpenseShareRepository;
-import com.spendwise.repository.GroupMemberRepository;
-import com.spendwise.repository.GroupRepository;
-import com.spendwise.repository.UserRepository;
+import com.spendwise.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,6 +42,7 @@ public class ExpenseShareService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
     private final ExpenseShareMapper expenseShareMapper;
+    private final NotificationService notificationService;
 
     @Transactional
     public List<ExpenseShareResponse> createShares(UUID expenseId, UUID groupId, CreateExpenseShareRequest request) {
@@ -157,8 +150,18 @@ public class ExpenseShareService {
             shares.add(share);
         }
 
-        List<ExpenseShare> savedShares =
-                expenseShareRepository.saveAll(shares);
+        List<ExpenseShare> savedShares = expenseShareRepository.saveAll(shares);
+
+        for (ExpenseShare share : savedShares) {
+
+            notificationService.createNotification(
+                    share.getUser(),
+                    NotificationType.EXPENSE_SHARE_CREATED,
+                    "New expense share",
+                    "You have been added to an expense share.",
+                    share.getId()
+            );
+        }
 
         return expenseShareMapper.toResponseList(savedShares);
     }

@@ -128,7 +128,7 @@ public class AnalyticsService {
             return List.of();
         }
 
-        Map<String, BigDecimal> categoryBudgets = new HashMap<>();
+        Map<String, Budget> categoryBudgets = new HashMap<>();
 
         List<Budget> budgets = budgetPeriod.getBudgets();
 
@@ -137,7 +137,7 @@ public class AnalyticsService {
             if (budget.getCategory() != null) {
                 categoryBudgets.put(
                         budget.getCategory().getName(),
-                        budget.getBudgetLimit()
+                        budget
                 );
             }
         }
@@ -191,10 +191,12 @@ public class AnalyticsService {
 
         List<CategorySpendingResponse> response = new ArrayList<>();
 
-        for (Map.Entry<String, BigDecimal> entry : categoryBudgets.entrySet()) {
+        for (Map.Entry<String, Budget> entry : categoryBudgets.entrySet()) {
 
             String category = entry.getKey();
-            BigDecimal budget = entry.getValue();
+            Budget categoryBudget = entry.getValue();
+
+            BigDecimal budget = categoryBudget.getBudgetLimit();
 
             BigDecimal spent = categorySpending.getOrDefault(
                     category,
@@ -203,6 +205,7 @@ public class AnalyticsService {
 
             CategorySpendingResponse temp =
                     CategorySpendingResponse.builder()
+                            .budgetId(categoryBudget.getId())
                             .categoryName(category)
                             .spent(spent)
                             .budget(budget)
@@ -210,6 +213,7 @@ public class AnalyticsService {
 
             response.add(temp);
         }
+
         return response;
     }
 
@@ -311,9 +315,53 @@ public class AnalyticsService {
         return response;
     }
 
+    public BudgetRemainingResponse getOverallBudgetRemaining() {
+
+        UUID userId = currentUserService.getCurrentUserId();
+
+        BudgetPeriod budgetPeriod = budgetPeriodRepository.findByUserIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(userId, LocalDate.now(), LocalDate.now()).orElse(null);
+
+        if (budgetPeriod == null) return null;
+
+        Budget overallBudget = budgetPeriod.getBudgets()
+                        .stream()
+                        .filter(budget -> budget.getCategory() == null)
+                        .findFirst()
+                        .orElse(null);
+
+        if (overallBudget == null) return null;
+
+        ZoneId zone = ZoneId.systemDefault();
+
+        OffsetDateTime start =
+                budgetPeriod.getStartDate()
+                        .atStartOfDay(zone)
+                        .toOffsetDateTime();
+
+        OffsetDateTime end =
+                budgetPeriod.getEndDate()
+                        .plusDays(1)
+                        .atStartOfDay(zone)
+                        .toOffsetDateTime();
+
+        BigDecimal spent = expenseRepository.sumActiveExpensesForPeriod(userId, start, end);
+
+        spent = spent.add(settlementRepository.sumSettlementsPaidForPeriod(userId, start, end));
+
+        spent = spent.subtract(settlementRepository.sumSettlementsReceivedForPeriod(userId, start, end));
+
+        return BudgetRemainingResponse.builder()
+                .budgetId(overallBudget.getId())
+                .remaining(
+                        overallBudget.getBudgetLimit().subtract(spent)
+                )
+                .build();
+    }
+
     @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
     public static class CategorySpendingResponse {
 
+        private UUID budgetId;
         private String categoryName;
         private BigDecimal spent;
         private BigDecimal budget;
@@ -333,5 +381,11 @@ public class AnalyticsService {
         private String title;
         private BigDecimal amount;
         private OffsetDateTime occurredAt;
+    }
+    @Getter @Setter @AllArgsConstructor @NoArgsConstructor @Builder
+    public static class BudgetRemainingResponse {
+
+        private UUID budgetId;
+        private BigDecimal remaining;
     }
 }

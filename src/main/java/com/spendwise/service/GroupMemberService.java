@@ -8,6 +8,7 @@ import com.spendwise.entity.GroupMemberId;
 import com.spendwise.entity.User;
 import com.spendwise.enums.GroupMemberStatus;
 import com.spendwise.enums.GroupStatus;
+import com.spendwise.enums.NotificationType;
 import com.spendwise.exception.GroupExceptions.ArchivedGroupException;
 import com.spendwise.exception.GroupExceptions.GroupDoesNotExist;
 import com.spendwise.exception.GroupExceptions.UnauthorizedGroupActionException;
@@ -34,6 +35,7 @@ public class GroupMemberService {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final ExpenseShareRepository expenseShareRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public List<GroupMemberResponse> addMembers(UUID groupId, AddGroupMemberRequest request) {
@@ -79,20 +81,20 @@ public class GroupMemberService {
 
             GroupMember savedMember = groupMemberRepository.save(member);
 
+            notificationService.createNotification(
+                    savedMember.getUser(),
+                    NotificationType.GROUP_MEMBER_ADDED,
+                    "Added to a group",
+                    "You've been added to a group " + group.getName(),
+                    group.getId()
+            );
+
             responses.add(
                     GroupMemberResponse.builder()
-                            .userId(
-                                    savedMember.getUser().getId()
-                            )
-                            .userName(
-                                    savedMember.getUser().getName()
-                            )
-                            .status(
-                                    savedMember.getStatus()
-                            )
-                            .joinedAt(
-                                    savedMember.getJoinedAt()
-                            )
+                            .userId(savedMember.getUser().getId())
+                            .userName(savedMember.getUser().getName())
+                            .status(savedMember.getStatus())
+                            .joinedAt(savedMember.getJoinedAt())
                             .build()
             );
         }

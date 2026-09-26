@@ -2,14 +2,13 @@ package com.spendwise.service;
 
 import com.spendwise.dto.request.expense.CreateExpenseRequest;
 import com.spendwise.dto.request.expense.GetExpenseRequest;
+import com.spendwise.dto.response.budget.BudgetResponse;
 import com.spendwise.dto.response.expense.ExpensePageResponse;
 import com.spendwise.dto.response.expense.ExpenseResponse;
-import com.spendwise.entity.Category;
-import com.spendwise.entity.Expense;
-import com.spendwise.entity.User;
-import com.spendwise.entity.Wallet;
+import com.spendwise.entity.*;
 import com.spendwise.enums.ExpenseSortField;
 import com.spendwise.enums.ExpenseStatus;
+import com.spendwise.enums.NotificationType;
 import com.spendwise.enums.WalletStatus;
 import com.spendwise.exception.CategoryExceptions.CategoryDoesNotExist;
 import com.spendwise.exception.ExpenseException.InsufficientBalanceException;
@@ -21,10 +20,7 @@ import com.spendwise.exception.WalletExceptions.ArchivedWalletException;
 import com.spendwise.exception.WalletExceptions.InvalidAmountException;
 import com.spendwise.exception.WalletExceptions.WalletDoesNotExist;
 import com.spendwise.mapper.ExpenseMapper;
-import com.spendwise.repository.CategoryRepository;
-import com.spendwise.repository.ExpenseRepository;
-import com.spendwise.repository.UserRepository;
-import com.spendwise.repository.WalletRepository;
+import com.spendwise.repository.*;
 import com.spendwise.specification.ExpenseSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -49,37 +45,95 @@ public class ExpenseService {
     private final WalletRepository walletRepository;
     private final CategoryRepository categoryRepository;
     private final ExpenseMapper expenseMapper;
-
+    private final NotificationService notificationService;
+    private final AnalyticsService analyticsService;
     private final CurrentUserService currentUserService;
 
-    public ExpenseResponse createExpense(CreateExpenseRequest request){
+    @Transactional
+    public ExpenseResponse createExpense(CreateExpenseRequest request) {
 
         UUID userId = currentUserService.getCurrentUserId();
 
-        Wallet wallet = walletRepository.findByWalletNameAndUserId(request.getWalletName(), userId).orElseThrow(()->new WalletDoesNotExist("Error "+request.getWalletName()));
-        Category category = categoryRepository
-                .findAvailableCategory(request.getCategoryName(), userId)
-                .orElseThrow(() ->
-                        new CategoryDoesNotExist("Category does not exist" + request.getCategoryName()));
+        Wallet wallet = walletRepository.findByWalletNameAndUserId(request.getWalletName(), userId).orElseThrow(() -> new WalletDoesNotExist("Error " + request.getWalletName()));
+
+        Category category = categoryRepository.findAvailableCategory(request.getCategoryName(), userId).orElseThrow(() -> new CategoryDoesNotExist("Category does not exist " + request.getCategoryName()));
 
         User userObj = userRepository.getReferenceById(userId);
 
         BigDecimal amount = request.getAmount();
+
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero");
         }
+
         if (wallet.getStatus() != WalletStatus.ACTIVE) {
             throw new ArchivedWalletException("Cannot create expense from an archived wallet");
         }
+
         if (wallet.getCurrentBalance().compareTo(amount) < 0) {
             throw new InsufficientBalanceException("Insufficient wallet balance");
         }
 
+        AnalyticsService.BudgetRemainingResponse overallBefore = analyticsService.getOverallBudgetRemaining();
+
+        List<AnalyticsService.CategorySpendingResponse> categoryBefore = analyticsService.getSpendingByCategory();
+
         wallet.setCurrentBalance(
                 wallet.getCurrentBalance().subtract(amount)
         );
+
         Expense expense = expenseMapper.toEntity(request, userObj, wallet, category, request.getStatus());
+
         Expense savedExpense = expenseRepository.save(expense);
+
+        AnalyticsService.BudgetRemainingResponse overallAfter = analyticsService.getOverallBudgetRemaining();
+
+        List<AnalyticsService.CategorySpendingResponse> categoryAfter = analyticsService.getSpendingByCategory();
+
+        if (overallBefore != null && overallAfter != null && overallBefore.getRemaining().compareTo(BigDecimal.ZERO) >= 0 && overallAfter.getRemaining().compareTo(BigDecimal.ZERO) < 0) {
+
+            notificationService.createNotification(
+                    userObj,
+                    NotificationType.BUDGET_EXCEEDED,
+                    "Budget Exceeded",
+                    "You have exceeded your budget.",
+                    overallAfter.getBudgetId()
+            );
+        }
+
+        AnalyticsService.CategorySpendingResponse categoryBeforeState =
+                categoryBefore.stream()
+                        .filter(c ->
+                                c.getCategoryName()
+                                        .equalsIgnoreCase(category.getName())
+                        )
+                        .findFirst()
+                        .orElse(null);
+
+        AnalyticsService.CategorySpendingResponse categoryAfterState =
+                categoryAfter.stream()
+                        .filter(c ->
+                                c.getCategoryName()
+                                        .equalsIgnoreCase(category.getName())
+                        )
+                        .findFirst()
+                        .orElse(null);
+
+        if (categoryBeforeState != null && categoryAfterState != null) {
+
+            BigDecimal categoryRemainingBefore = categoryBeforeState.getBudget().subtract(categoryBeforeState.getSpent());
+            BigDecimal categoryRemainingAfter = categoryAfterState.getBudget().subtract(categoryAfterState.getSpent());
+            if (categoryRemainingBefore.compareTo(BigDecimal.ZERO) >= 0 && categoryRemainingAfter.compareTo(BigDecimal.ZERO) < 0) {
+                notificationService.createNotification(
+                        userObj,
+                        NotificationType.BUDGET_EXCEEDED,
+                        "Budget Exceeded",
+                        "You've exceeded your " + category.getName() + " budget.",
+                        categoryAfterState.getBudgetId()
+                );
+            }
+        }
+
         return expenseMapper.toResponse(savedExpense);
     }
 

@@ -44,12 +44,10 @@ public class SettlementService {
     private final SettlementMapper settlementMapper;
     private final CategoryRepository categoryRepository;
     private final WalletRepository walletRepository;
+    private final NotificationService notificationService;
 
     @Transactional
-    public SettlementResponse createSettlement(
-            UUID expenseShareId,
-            CreateSettlementRequest request
-    ) {
+    public SettlementResponse createSettlement(UUID expenseShareId, CreateSettlementRequest request) {
 
         UUID currentUserId = currentUserService.getCurrentUserId();
 
@@ -121,12 +119,19 @@ public class SettlementService {
             expenseShare.setStatus(ExpenseShareStatus.SETTLED);
         }
 
-        Settlement savedSettlement =
-                settlementRepository.save(settlement);
+        Settlement savedSettlement = settlementRepository.save(settlement);
 
         expenseShareRepository.save(expenseShare);
 
         walletRepository.save(wallet);
+
+        notificationService.createNotification(
+                savedSettlement.getReceiver(),
+                NotificationType.SETTLEMENT_RECEIVED,
+                "Settlement received",
+                "You have received a settlement.",
+                savedSettlement.getId()
+        );
 
         return settlementMapper.toResponse(savedSettlement);
     }
