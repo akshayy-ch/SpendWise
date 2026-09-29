@@ -60,7 +60,15 @@ public class JwtService{
 
     public boolean isTokenValid(String token, String username) {
         Claims claims = getClaims(token);
-        if(claims == null)return false;
-        return (username.equals(claims.getSubject()) && !claims.getExpiration().before(new Date()));
+
+        if (claims == null) {
+            return false;
+        }
+
+        Date expiration = claims.getExpiration();
+
+        return username.equals(claims.getSubject())
+                && expiration != null
+                && !expiration.before(new Date());
     }
 }

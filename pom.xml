@@ -125,6 +125,11 @@
             <version>2.8.5</version> <!-- Check for the latest stable release -->
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
