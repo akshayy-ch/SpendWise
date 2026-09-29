@@ -12,6 +12,7 @@ import CategoriesPage from "./pages/app/CategoriesPage";
 import IncomePage from "./pages/app/IncomePage";
 import GroupsPage from "./pages/app/GroupsPage";
 import SharedPage from "./pages/app/SharedPage";
+import BudgetsPage from "./pages/app/BudgetsPage";
 
 function Placeholder({ title }: { title: string }) {
   return <section className="placeholder-page"><span className="eyebrow">SpendWise</span><h2>{title}</h2><p>This workspace is being connected to the SpendWise API.</p></section>;
@@ -42,7 +43,7 @@ export default function App() {
         <Route path="income" element={<IncomePage />} />
         <Route path="groups" element={<GroupsPage />} />
         <Route path="shared" element={<SharedPage />} />
-        <Route path="budgets" element={<Placeholder title="Budgets" />} />
+        <Route path="budgets" element={<BudgetsPage />} />
         <Route path="analytics" element={<Placeholder title="Analytics" />} />
         <Route path="notifications" element={<Placeholder title="Notifications" />} />
       </Route>
