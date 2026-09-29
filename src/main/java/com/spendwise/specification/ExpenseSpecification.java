@@ -38,7 +38,7 @@ public final class ExpenseSpecification {
     public static Specification<Expense> hasWallet(String walletName){
         return (root, query, criteriaBuilder)->
                 criteriaBuilder.equal(
-                        root.get("wallet").get("name"),
+                        root.get("wallet").get("walletName"),
                         walletName
                 );
     }

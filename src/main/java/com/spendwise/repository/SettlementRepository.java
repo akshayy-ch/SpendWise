@@ -2,6 +2,7 @@ package com.spendwise.repository;
 
 import com.spendwise.entity.Settlement;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,12 @@ public interface SettlementRepository extends JpaRepository<Settlement, UUID> {
 
     List<Settlement> findAllByExpenseShareId(UUID expenseShareId);
 
+    @EntityGraph(attributePaths = {
+            "expenseShare",
+            "payer",
+            "receiver",
+            "category"
+    })
     Page<Settlement> findAllByPayerIdOrReceiverId(
             UUID payerId,
             UUID receiverId,

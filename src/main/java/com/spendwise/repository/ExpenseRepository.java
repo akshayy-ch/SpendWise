@@ -3,10 +3,9 @@ package com.spendwise.repository;
 import com.spendwise.entity.Expense;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
@@ -23,6 +22,13 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Expense e WHERE e.id = :expenseId")
     Optional<Expense> findByIdForUpdate(@Param("expenseId") UUID expenseId);
+
+    @EntityGraph(attributePaths = {"wallet", "category"})
+    @Override
+    Page<Expense> findAll(
+            Specification<Expense> specification,
+            Pageable pageable
+    );
 
     @Query("""
     SELECT COALESCE(SUM(e.amount), 0)

@@ -4,6 +4,7 @@ import com.spendwise.entity.Expense;
 import com.spendwise.entity.ExpenseShare;
 import com.spendwise.enums.ExpenseShareStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +24,7 @@ public interface ExpenseShareRepository
             UUID userId
     );
 
+    @EntityGraph(attributePaths = {"expense", "group"})
     List<ExpenseShare> findAllByExpenseId(
             UUID expenseId
     );
@@ -57,6 +59,8 @@ public interface ExpenseShareRepository
             @Param("groupId") UUID groupId
     );
     List<ExpenseShare> findByExpenseId(UUID expenseId);
+
+    @EntityGraph(attributePaths = {"expense", "group"})
     List<ExpenseShare> findByUserId(UUID userId);
 
     @Query("""

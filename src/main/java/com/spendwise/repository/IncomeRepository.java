@@ -1,8 +1,10 @@
 package com.spendwise.repository;
 
-import com.spendwise.entity.Expense;
 import com.spendwise.entity.Income;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -17,33 +19,11 @@ public interface IncomeRepository extends JpaRepository<Income, UUID>, JpaSpecif
 
     List<Income> findByUserId(UUID userId);
 
-    Optional<Income> findByIdAndUserId(UUID incomeId, UUID userId);
-
-    List<Income> findByUserIdAndSource(
-            UUID userId,
-            String source
-    );
-
-    List<Income> findByUserIdAndIncomeAtBetween(
-            UUID userId,
-            OffsetDateTime start,
-            OffsetDateTime end
-    );
-
-    List<Income> findByUserIdAndIncomeAtGreaterThanEqual(
-            UUID userId,
-            OffsetDateTime start
-    );
-
-    List<Income> findByUserIdAndIncomeAtLessThanEqual(
-            UUID userId,
-            OffsetDateTime end
-    );
-    List<Income> findByUserIdAndSourceAndIncomeAtBetween(
-            UUID userId,
-            String source,
-            OffsetDateTime start,
-            OffsetDateTime end
+    @EntityGraph(attributePaths = {"wallet"})
+    @Override
+    Page<Income> findAll(
+            Specification<Income> specification,
+            Pageable pageable
     );
 
     @Query("""
