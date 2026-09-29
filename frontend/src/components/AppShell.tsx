@@ -1,13 +1,15 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { BarChart3, Bell, ChevronDown, CircleDollarSign, CreditCard, LayoutDashboard, LogOut, PieChart, Receipt, Settings, Users, WalletCards } from "lucide-react";
+import { BarChart3, Bell, ChevronDown, CircleDollarSign, LayoutDashboard, LogOut, PieChart, Receipt, Tags, Users, WalletCards } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/app/expenses", label: "Expenses", icon: Receipt },
   { to: "/app/income", label: "Income", icon: CircleDollarSign },
+  { to: "/app/categories", label: "Categories", icon: Tags },
   { to: "/app/wallets", label: "Wallets", icon: WalletCards },
   { to: "/app/groups", label: "Groups", icon: Users },
+  { to: "/app/shared", label: "Shared", icon: Users },
   { to: "/app/budgets", label: "Budgets", icon: PieChart },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
 ];
@@ -25,7 +27,7 @@ export default function AppShell() {
       </div>
     </aside>
     <main className="app-main">
-      <header className="app-header"><div><span className="header-kicker">SpendWise</span><h1>Financial workspace</h1></div><div className="header-actions"><button className="icon-button" aria-label="Notifications"><Bell size={19}/></button><button className="profile-button"><span className="avatar">A</span><span className="profile-copy"><b>Account</b><small>Personal</small></span><ChevronDown size={15}/></button></div></header>
+      <header className="app-header"><div><span className="header-kicker">SpendWise</span><h1>Financial workspace</h1></div><div className="header-actions"><button className="icon-button" aria-label="Notifications" onClick={()=>navigate("/app/notifications")}><Bell size={19}/></button><button className="profile-button"><span className="avatar">A</span><span className="profile-copy"><b>Account</b><small>Personal</small></span><ChevronDown size={15}/></button></div></header>
       <div className="app-content"><Outlet /></div>
     </main>
   </div>;
