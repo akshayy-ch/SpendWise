@@ -35,7 +35,6 @@ export default function App() {
       <Route path="/app" element={<AppShell />}>
         <Route index element={<DashboardPage />} />
         <Route path="expenses" element={<ExpensesPage />} />
-        <Route path="income" element={<Placeholder title="Income" />} />
         <Route path="wallets" element={<WalletsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="income" element={<IncomePage />} />
