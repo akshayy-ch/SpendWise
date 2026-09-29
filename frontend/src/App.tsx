@@ -9,6 +9,7 @@ import DashboardPage from "./pages/app/DashboardPage";
 import ExpensesPage from "./pages/app/ExpensesPage";
 import WalletsPage from "./pages/app/WalletsPage";
 import CategoriesPage from "./pages/app/CategoriesPage";
+import IncomePage from "./pages/app/IncomePage";
 
 function Placeholder({ title }: { title: string }) {
   return <section className="placeholder-page"><span className="eyebrow">SpendWise</span><h2>{title}</h2><p>This workspace is being connected to the SpendWise API.</p></section>;
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="income" element={<Placeholder title="Income" />} />
         <Route path="wallets" element={<WalletsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="income" element={<IncomePage />} />
         <Route path="groups" element={<Placeholder title="Groups" />} />
         <Route path="budgets" element={<Placeholder title="Budgets" />} />
         <Route path="analytics" element={<Placeholder title="Analytics" />} />
