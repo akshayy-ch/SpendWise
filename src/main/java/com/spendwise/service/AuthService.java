@@ -13,7 +13,6 @@ import com.spendwise.exception.AuthExceptions.EmailAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.PhoneNoAlreadyExistsException;
 import com.spendwise.exception.AuthExceptions.UsernameAlreadyExistsException;
 import com.spendwise.exception.EmailExceptions.EmailNotVerifiedException;
-import com.spendwise.exception.GroupMemberExceptions.UserDoesNotExist;
 import com.spendwise.repository.UserRepository;
 import com.spendwise.repository.WalletRepository;
 import com.spendwise.security.JwtService;
@@ -99,21 +98,21 @@ public class AuthService {
                 .amount(wallet.getCurrentBalance())
                 .build();
     }
-        public LoginResponse login(LoginRequest request){
-            log.info("Login request with username={}", request.getUsername());
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(request.getUsername(),request.getPassword());
-            Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
-            SpendWiseUserDetails userDetails = (SpendWiseUserDetails) authentication.getPrincipal();
-            if (!userDetails.isEmailVerified()) {
-                throw new EmailNotVerifiedException(
-                        "Please verify your email before logging in"
-                );
-            }
-            String token = jwtService.generateToken(authentication.getName());
-            return LoginResponse.builder()
-                    .authToken(token)
-                    .build();
+    public LoginResponse login(LoginRequest request){
+        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
+        Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+        SpendWiseUserDetails userDetails = (SpendWiseUserDetails) authentication.getPrincipal();
+        if (!userDetails.isEmailVerified()) {
+            throw new EmailNotVerifiedException(
+                    "Please verify your email before logging in"
+            );
         }
+        log.info("User logged in successfully with username={}", userDetails.getUsername());
+        String token = jwtService.generateToken(authentication.getName());
+        return LoginResponse.builder()
+                .authToken(token)
+                .build();
+    }
     public void resendVerificationEmail(ResendVerificationEmailRequest request) {
 
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
