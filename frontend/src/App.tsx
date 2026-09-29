@@ -15,6 +15,7 @@ import SharedPage from "./pages/app/SharedPage";
 import BudgetsPage from "./pages/app/BudgetsPage";
 import AnalyticsPage from "./pages/app/AnalyticsPage";
 import NotificationsPage from "./pages/app/NotificationsPage";
+import AdminPage from "./pages/app/AdminPage";
 
 function Placeholder({ title }: { title: string }) {
   return <section className="placeholder-page"><span className="eyebrow">SpendWise</span><h2>{title}</h2><p>This workspace is being connected to the SpendWise API.</p></section>;
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="budgets" element={<BudgetsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="admin" element={<AdminPage />} />
       </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace />} />
