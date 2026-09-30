@@ -1,6 +1,7 @@
 import type { ExpenseStatus } from "./expenseStatus";
 
 export interface Expense {
+  id: string;
   title: string;
   amount: number;
   categoryName: string;

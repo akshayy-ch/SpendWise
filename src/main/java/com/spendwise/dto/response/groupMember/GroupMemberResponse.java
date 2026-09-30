@@ -12,9 +12,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class GroupMemberResponse {
-
     private UUID userId;
     private String userName;
+    private String username;
     private GroupMemberStatus status;
     private OffsetDateTime joinedAt;
 }

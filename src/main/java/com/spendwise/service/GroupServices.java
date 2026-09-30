@@ -21,7 +21,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,7 +33,6 @@ public class GroupServices {
     private final ExpenseShareRepository expenseShareRepository;
     private final GroupMapper groupMapper;
     private final UserRepository userRepository;
-
 
     @Transactional
     public GroupResponse createGroup(CreateGroupRequest request){
@@ -49,12 +48,7 @@ public class GroupServices {
 
         Group createdGroup = groupRepository.save(group);
 
-        GroupMemberId groupMemberId =
-                new GroupMemberId(
-                        createdGroup.getId(),
-                        user.getId()
-                );
-
+        GroupMemberId groupMemberId = new GroupMemberId(createdGroup.getId(), user.getId());
         GroupMember groupMember = GroupMember.builder()
                 .id(groupMemberId)
                 .group(createdGroup)
@@ -63,16 +57,21 @@ public class GroupServices {
                 .build();
 
         groupMemberRepository.save(groupMember);
-        return GroupResponse.builder()
-                .name(createdGroup.getName())
-                .status(String.valueOf(createdGroup.getStatus()))
-                .creatorName(user.getName())
-                .build();
+        return groupMapper.toResponse(createdGroup);
+    }
+
+    public List<GroupResponse> getMyGroups() {
+        UUID userId = currentUserService.getCurrentUserId();
+        return groupMemberRepository.findAllByIdUserIdAndStatus(userId, GroupMemberStatus.ACTIVE)
+                .stream()
+                .map(GroupMember::getGroup)
+                .filter(group -> group.getStatus() == GroupStatus.ACTIVE)
+                .map(groupMapper::toResponse)
+                .toList();
     }
 
     @Transactional
     public GroupResponse archiveGroup(UUID groupId) {
-
         UUID currentUserId = currentUserService.getCurrentUserId();
 
         Group group = groupRepository.findById(groupId)
@@ -81,23 +80,14 @@ public class GroupServices {
         if (!group.getUser().getId().equals(currentUserId)) {
             throw new UnauthorizedGroupActionException("Only the group creator can archive the group");
         }
-
         if (group.getStatus() == GroupStatus.ARCHIVED) {
             throw new ArchivedGroupException("Group is already archived");
         }
-
-        boolean hasOutstandingBalance =
-                expenseShareRepository.hasOutstandingShares(groupId);
-        if (hasOutstandingBalance) {
-            throw new OutStandingBalanceException(
-                    "Group cannot be archived while outstanding balances exist"
-            );
+        if (expenseShareRepository.hasOutstandingShares(groupId)) {
+            throw new OutStandingBalanceException("Group cannot be archived while outstanding balances exist");
         }
 
         group.setStatus(GroupStatus.ARCHIVED);
-
-        Group archivedGroup = groupRepository.save(group);
-
-        return groupMapper.toResponse(archivedGroup);
+        return groupMapper.toResponse(groupRepository.save(group));
     }
 }
