@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { FolderKanban, Plus, Tag } from "lucide-react";
 import { categoryApi } from "../../api/categoryApi";
 import type { Category } from "../../types/category";
