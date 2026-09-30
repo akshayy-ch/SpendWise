@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Archive, CreditCard, Landmark, Plus, RefreshCw, Wallet as WalletIcon } from "lucide-react";
 import { walletApi } from "../../api/walletApi";
 import type { Wallet } from "../../types/wallet";
