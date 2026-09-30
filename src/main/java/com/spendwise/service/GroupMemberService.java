@@ -80,6 +80,7 @@ public class GroupMemberService {
         return responses;
     }
 
+    @Transactional(readOnly = true)
     public List<GroupMemberResponse> getMembers(UUID groupId) {
         UUID currentUserId = currentUserService.getCurrentUserId();
         GroupMember currentMember = groupMemberRepository.findByIdGroupIdAndIdUserId(groupId, currentUserId)
