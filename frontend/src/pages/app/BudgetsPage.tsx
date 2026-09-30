@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { CalendarRange, Plus, Save, Trash2, WalletCards } from "lucide-react";
 import { budgetApi } from "../../api/budgetApi";
 import { categoryApi } from "../../api/categoryApi";
