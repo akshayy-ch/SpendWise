@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { Archive, ChevronDown, Plus, Search, UserPlus, Users } from "lucide-react";
 import { analyticsApi } from "../../api/analyticsApi";
 import { groupApi } from "../../api/groupApi";
