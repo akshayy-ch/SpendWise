@@ -60,6 +60,7 @@ public class GroupServices {
         return groupMapper.toResponse(createdGroup);
     }
 
+    @Transactional
     public List<GroupResponse> getMyGroups() {
         UUID userId = currentUserService.getCurrentUserId();
         return groupMemberRepository.findAllByIdUserIdAndStatus(userId, GroupMemberStatus.ACTIVE)
