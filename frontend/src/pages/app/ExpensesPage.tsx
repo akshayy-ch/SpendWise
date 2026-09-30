@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { ChevronLeft, ChevronRight, Filter, Plus, Search, SlidersHorizontal, Users, X } from "lucide-react";
 import { expenseApi } from "../../api/expenseApi";
 import { walletApi } from "../../api/walletApi";
