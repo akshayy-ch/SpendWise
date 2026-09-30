@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus, Search, TrendingUp } from "lucide-react";
 import { incomeApi } from "../../api/incomeApi";
 import { walletApi } from "../../api/walletApi";
