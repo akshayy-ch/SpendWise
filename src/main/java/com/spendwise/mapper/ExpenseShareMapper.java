@@ -12,6 +12,8 @@ public interface ExpenseShareMapper {
 
     @Mapping(target = "expenseId", source = "expense.id")
     @Mapping(target = "groupId", source = "group.id")
+    @Mapping(target = "groupName", source = "group.name")
+    @Mapping(target = "receiverId", source = "expense.user.id")
     @Mapping(target = "expenseTitle", source = "expense.title")
     ExpenseShareResponse toResponse(ExpenseShare expenseShare);
 
