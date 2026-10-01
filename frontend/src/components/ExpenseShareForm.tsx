@@ -13,7 +13,6 @@ export default function ExpenseShareForm({ expense, onCreated, onCancel }: { exp
   const [selected, setSelected] = useState<string[]>([]);
   const [splitType, setSplitType] = useState<"EQUAL" | "PERCENTAGE" | "RANDOM">("EQUAL");
   const [percentages, setPercentages] = useState<Record<string, string>>({});
-  const [username, setUsername] = useState("");
   const [profileUsername, setProfileUsername] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -78,6 +77,5 @@ export default function ExpenseShareForm({ expense, onCreated, onCancel }: { exp
       </div>)}</div>}
     {error && <div className="form-error">{error}</div>}
     <div className="expense-form-actions"><button className="button button-secondary" onClick={onCancel}>Cancel</button><button className="button button-primary" disabled={saving || !eligible.length} onClick={submit}>{saving ? "Sharing..." : "Create expense shares"}</button></div>
-    {username && <span>{username}</span>}
   </section>;
 }
