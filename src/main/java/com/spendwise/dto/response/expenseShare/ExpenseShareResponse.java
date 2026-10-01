@@ -20,5 +20,7 @@ public class ExpenseShareResponse {
     private BigDecimal remainingAmount;
     private ExpenseShareStatus status;
     private UUID groupId;
+    private String groupName;
+    private UUID receiverId;
     private BigDecimal percentage;
 }
