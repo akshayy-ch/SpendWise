@@ -30,7 +30,7 @@ export default function ExpenseShareForm({ expense, onCreated, onCancel }: { exp
       .catch((err: any) => setError(err.response?.data?.message ?? "Couldn't load group members."));
   }, [groupId]);
 
-  const eligible = useMemo(() => members.filter(member => member.username !== profileUsername), [members, profileUsername]);
+  const eligible = useMemo(() => members.filter(member => member.userName !== profileUsername), [members, profileUsername]);
 
   function toggle(id: string) {
     setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
@@ -72,7 +72,7 @@ export default function ExpenseShareForm({ expense, onCreated, onCancel }: { exp
     <div className="share-member-head"><b>Group members</b><span>{selected.length} selected</span></div>
     {eligible.length === 0 ? <div className="share-empty"><Users size={18}/><span>No other active members in this group. Add members from the Groups page first.</span></div> :
       <div className="share-members">{eligible.map(member => <div className={"share-member " + (selected.includes(member.userId) ? "selected" : "")} key={member.userId}>
-        <button type="button" onClick={() => toggle(member.userId)}><span className="avatar">{member.userName.charAt(0).toUpperCase()}</span><span><b>{member.userName}</b><small>@{member.username}</small></span><span className="share-check">{selected.includes(member.userId) && <Check size={14}/>}</span></button>
+        <button type="button" onClick={() => toggle(member.userId)}><span className="avatar">{member.userName.charAt(0).toUpperCase()}</span><span><b>{member.userName}</b><small>@{member.userName}</small></span><span className="share-check">{selected.includes(member.userId) && <Check size={14}/>}</span></button>
         {splitType === "PERCENTAGE" && selected.includes(member.userId) && <input type="number" min="0.01" max="100" step="0.01" value={percentages[member.userId] ?? ""} onChange={e => updatePercentage(member.userId, e.target.value)} placeholder="%" />}
       </div>)}</div>}
     {error && <div className="form-error">{error}</div>}

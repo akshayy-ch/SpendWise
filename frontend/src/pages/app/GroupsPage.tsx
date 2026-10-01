@@ -69,7 +69,7 @@ export default function GroupsPage() {
         <small>{group.description || "Shared expenses"}</small><h3>{group.name}</h3><strong>{openGroups[group.id] ?? 0} open expense{(openGroups[group.id] ?? 0) === 1 ? "" : "s"}</strong>
         <div className="wallet-card-bottom"><button onClick={() => toggleMembers(group.id)}><ChevronDown size={13}/> {expanded === group.id ? "Hide members" : "Members"}</button><button onClick={() => archive(group.id)}><Archive size={13}/> Archive</button></div>
         {expanded === group.id && <div className="group-members-panel">
-          {members.map(member => <div className="group-member-row" key={member.userId}><span className="avatar">{member.userName.charAt(0).toUpperCase()}</span><div><b>{member.userName}</b><small>@{member.username}</small></div><span className="status-pill active">ACTIVE</span></div>)}
+          {members.map(member => <div className="group-member-row" key={member.userId}><span className="avatar">{member.userName.charAt(0).toUpperCase()}</span><div><b>{member.userName}</b><small>@{member.userName}</small></div><span className="status-pill active">ACTIVE</span></div>)}
           <div className="member-add">
             <form onSubmit={e => { e.preventDefault(); findUsers(); }}><Search size={14}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search username..."/><button><UserPlus size={14}/></button></form>
             {results.map(user => <button className="user-result" key={user.id} disabled={adding} onClick={() => addMember(user.id)}><span>{user.name}</span><small>@{user.username}</small></button>)}
