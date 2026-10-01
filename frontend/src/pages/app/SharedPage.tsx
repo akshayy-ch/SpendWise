@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, CircleDollarSign, HandCoins, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleDollarSign, HandCoins, Users } from "lucide-react";
 import { sharedFinanceApi } from "../../api/sharedFinanceApi";
 import { walletApi } from "../../api/walletApi";
 import { categoryApi } from "../../api/categoryApi";
