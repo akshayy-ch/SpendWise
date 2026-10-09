@@ -25,7 +25,7 @@ export default function CategoriesPage() {
     finally { setCreating(false); }
   }
 
-  return <div className="finance-page"><section className="page-intro"><div><span className="header-kicker">Organization</span><h2>Categories.</h2><p>Keep your spending organized your way.</p></div></section>
+  return <div className="finance-page"><section className="page-intro"><div><h2>Categories</h2><p>Keep your spending organized your way.</p></div></section>
     <form className="category-create" onSubmit={create}><div className="category-create-title"><Tag size={17}/><div><b>Create a custom category</b><small>System categories remain available alongside your own.</small></div></div><input required minLength={3} maxLength={50} value={name} onChange={e=>setName(e.target.value)} placeholder="Category name"/><input minLength={3} maxLength={50} value={icon} onChange={e=>setIcon(e.target.value)} placeholder="Icon (optional)"/><button className="button button-primary" disabled={creating}><Plus size={15}/>{creating ? "Creating..." : "Create"}</button></form>
     {error && <div className="inline-error"><FolderKanban size={15}/>{error}<button onClick={load}>Retry</button></div>}
     <div className="category-toolbar"><div><b>Available categories</b><span>{categories.length} categories</span></div><select value={filter} onChange={e=>setFilter(e.target.value)}><option value="ALL">All</option><option value="SYSTEM">System</option><option value="CUSTOM">Custom</option></select></div>

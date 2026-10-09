@@ -11,12 +11,12 @@ export default function AccountPage() {
     userApi.getMe().then(setProfile).catch((err: any) => setError(err.response?.data?.message ?? "Couldn't load your account."));
   }, []);
 
-  if (error) return <section className="dashboard-state"><div><span className="eyebrow">Account</span><h2>Couldn't load your account.</h2><p>{error}</p></div></section>;
+  if (error) return <section className="dashboard-state"><div><h2>Couldn't load your account</h2><p>{error}</p></div></section>;
   if (!profile) return <div className="finance-page"><div className="account-skeleton"/></div>;
 
   return <div className="finance-page">
     <section className="page-intro">
-      <div><span className="header-kicker">Personal account</span><h2>Account.</h2><p>Your SpendWise account details.</p></div>
+      <div><h2>Account</h2><p>Your SpendWise account details.</p></div>
     </section>
     <section className="account-grid">
       <article className="account-card account-hero-card">

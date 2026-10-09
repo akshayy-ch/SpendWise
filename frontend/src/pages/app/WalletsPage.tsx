@@ -26,7 +26,7 @@ export default function WalletsPage() {
     } catch (err: any) { setError(err.response?.data?.message ?? "Wallet status couldn't be changed."); }
   }
 
-  return <div className="finance-page"><section className="page-intro"><div><span className="header-kicker">Money sources</span><h2>Wallets.</h2><p>Manage the places your money lives.</p></div><button className="button button-primary" onClick={() => setShowForm(v => !v)}><Plus size={17}/> New wallet</button></section>
+  return <div className="finance-page"><section className="page-intro"><div><h2>Wallets</h2><p>Manage the places your money lives.</p></div><button className="button button-primary" onClick={() => setShowForm(v => !v)}><Plus size={17}/> New wallet</button></section>
     {showForm && <WalletForm onCreated={() => { setShowForm(false); load(); }} />}
     {error && <div className="inline-error"><RefreshCw size={15}/>{error}<button onClick={load}>Retry</button></div>}
     {loading ? <div className="wallet-grid">{[1,2,3].map(i => <div className="wallet-card wallet-skeleton" key={i}/>)}</div> : <div className="wallet-grid">{wallets.map(wallet => <WalletCard key={wallet.walletName} wallet={wallet} onToggle={() => toggle(wallet)} />)}{wallets.length === 0 && <div className="wallet-empty">No wallets yet. Create your first wallet to start tracking money.</div>}</div>}
@@ -35,7 +35,7 @@ export default function WalletsPage() {
 
 function WalletCard({ wallet, onToggle }: { wallet: Wallet; onToggle: () => void }) {
   const Icon = wallet.type.toLowerCase().includes("bank") ? Landmark : wallet.type.toLowerCase().includes("card") ? CreditCard : WalletIcon;
-  return <article className="wallet-card"><div className="wallet-card-top"><span className="wallet-icon"><Icon size={18}/></span><span className={"status-pill " + wallet.status.toLowerCase()}>{wallet.status}</span></div><small>{wallet.type}</small><h3>{wallet.walletName}</h3><strong>{money.format(wallet.currentBalance)}</strong><div className="wallet-card-bottom"><span>Created {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(wallet.createdAt))}</span><button onClick={onToggle}><Archive size={13}/>{wallet.status === "ACTIVE" ? "Archive" : "Activate"}</button></div></article>;
+  return <article className={"wallet-card note-" + wallet.type.toLowerCase()}><div className="wallet-card-top"><span className="wallet-icon"><Icon size={18}/></span><span className={"status-pill " + wallet.status.toLowerCase()}>{wallet.status}</span></div><small>{wallet.type}</small><h3>{wallet.walletName}</h3><strong>{money.format(wallet.currentBalance)}</strong><div className="wallet-card-bottom"><span>Created {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(wallet.createdAt))}</span><button onClick={onToggle}><Archive size={13}/>{wallet.status === "ACTIVE" ? "Archive" : "Activate"}</button></div></article>;
 }
 
 function WalletForm({ onCreated }: { onCreated: () => void }) {

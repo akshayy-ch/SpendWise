@@ -59,7 +59,7 @@ export default function GroupsPage() {
   }
 
   return <div className="finance-page">
-    <section className="page-intro"><div><span className="header-kicker">Shared finance</span><h2>Groups.</h2><p>Your groups, members and open obligations.</p></div><button className="button button-primary" onClick={() => setShowForm(v => !v)}><Plus size={17}/> Create group</button></section>
+    <section className="page-intro"><div><h2>Groups</h2><p>Your groups, members and open obligations.</p></div><button className="button button-primary" onClick={() => setShowForm(v => !v)}><Plus size={17}/> Create group</button></section>
     {showForm && <CreateGroupForm onCreated={() => { setShowForm(false); load(); }} />}
     {error && <div className="inline-error"><Users size={15}/>{error}<button onClick={load}>Retry</button></div>}
     <div className="shared-section-title"><div><b>My groups</b><span>Active groups you belong to</span></div></div>

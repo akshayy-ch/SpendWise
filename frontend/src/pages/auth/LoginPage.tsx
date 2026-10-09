@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
@@ -33,12 +33,12 @@ export default function LoginPage() {
     }
   }
 
-  return <AuthLayout eyebrow="Welcome back" title="Your finances, right where you left them." subtitle="Sign in to continue managing your money with SpendWise.">
+  return <AuthLayout eyebrow="Welcome back" title="Sign in to SpendWise" subtitle="Welcome back. Enter your details to continue.">
     <form onSubmit={submit} className="auth-form">
       <label>Username<div className="input-wrap"><UserRound size={17}/><input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Enter your username" autoComplete="username" required /></div></label>
-      <label>Password<div className="input-wrap"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required /><button type="button" className="input-action" onClick={()=>setShowPassword(v=>!v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+      <label>Password<div className="input-wrap"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required /><button type="button" className="input-action" aria-label={showPassword ? "Hide password" : "Show password"} onClick={()=>setShowPassword(v=>!v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
       {error && <div className="form-error">{error}</div>}
-      <button className="button button-primary auth-submit" disabled={loading}>{loading ? "Signing in..." : <>Sign in <ArrowRight size={17}/></>}</button>
+      <button className="button button-primary auth-submit" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
       <p className="auth-switch">Don't have an account? <Link to="/register">Create one</Link></p>
     </form>
   </AuthLayout>;
@@ -49,8 +49,8 @@ export function AuthLayout({ eyebrow, title, subtitle, children }: { eyebrow: st
     <div className="auth-decoration"><span/><span/><span/></div>
     <Link to="/" className="auth-brand brand"><span className="brand-mark"><span/><span/><span/></span>SpendWise</Link>
     <div className="auth-shell">
-      <div className="auth-side"><div className="eyebrow">SpendWise</div><h2>Money should feel <span>clear.</span></h2><p>Track your spending, stay on top of budgets and settle shared expenses without the spreadsheet chaos.</p><div className="auth-side-line"><span/> Built for your everyday money.</div></div>
-      <section className="auth-card"><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}</section>
+      <div className="auth-side"><h2>Log what you spend. Split what you share. See what is left.</h2><p>Wallets, budgets and group expenses live in one account, so nothing gets lost in a chat thread or a spreadsheet.</p></div>
+      <section className="auth-card"><h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}</section>
     </div>
   </main>;
 }

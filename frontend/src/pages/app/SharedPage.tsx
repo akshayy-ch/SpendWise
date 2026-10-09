@@ -37,7 +37,7 @@ export default function SharedPage(){
 
  return <div className="finance-page">
   <section className="page-intro">
-   <div><span className="header-kicker">Split & settle</span><h2>Shared finance.</h2><p>Track your outstanding shares and settlement history.</p></div>
+   <div><h2>Shared finance</h2><p>Track your outstanding shares and settlement history.</p></div>
   </section>
   <div className="shared-tabs">
    <button className={tab==="shares"?"active":""} onClick={()=>setTab("shares")}><HandCoins size={15}/> My shares</button>
