@@ -47,7 +47,6 @@ public class AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         log.info("Registering user with username={}", request.getUsername());
-
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new UsernameAlreadyExistsException("UserName already in use");
         }
