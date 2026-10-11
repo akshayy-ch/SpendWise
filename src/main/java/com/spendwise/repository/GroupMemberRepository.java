@@ -10,12 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupMemberId> {
-
     Optional<GroupMember> findByGroupIdAndUserId(UUID groupId, UUID userId);
-
     List<GroupMember> findAllByGroupId(UUID groupId);
-
     List<GroupMember> findAllByGroupIdAndStatus(UUID groupId, GroupMemberStatus status);
-
+    List<GroupMember> findAllByIdUserIdAndStatus(UUID userId, GroupMemberStatus status);
     Optional<GroupMember> findByIdGroupIdAndIdUserId(UUID groupId, UUID userId);
 }
