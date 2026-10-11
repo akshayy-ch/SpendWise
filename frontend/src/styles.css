@@ -77,6 +77,7 @@ input::placeholder { color: #82869c; }
 input:focus, select:focus { outline: 2px solid var(--teal); outline-offset: 0; border-color: var(--teal); }
 select { padding-right: 8px; }
 .form-error, .inline-error { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; background: var(--magenta-tint); border: 1px solid #efb9d0; color: #8c1749; font-size: 14px; font-weight: 500; }
+.form-success { padding: 10px 14px; border-radius: 8px; background: var(--green-tint); border: 1px solid #bfdcb4; color: #1f5a2a; font-size: 14px; font-weight: 500; }
 .inline-error { margin-bottom: 16px; }
 .inline-error button { margin-left: auto; color: #8c1749; font-weight: 700; text-decoration: underline; }
 
@@ -160,12 +161,6 @@ select { padding-right: 8px; }
 .auth-submit { width: 100%; margin-top: 4px; }
 .auth-switch { text-align: center; color: var(--muted); font-size: 14px; }
 .auth-switch a { color: var(--teal); font-weight: 650; }
-.verification-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 22px; text-align: center; }
-.verification-state p { color: var(--muted); }
-.verification-state span { font-size: 13.5px; color: var(--muted); }
-.verification-icon { display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 6px; border-radius: 50%; background: var(--teal-tint); color: var(--teal); }
-.verification-state.success .verification-icon { background: var(--green-tint); color: var(--green); }
-.verification-state.error .verification-icon { background: var(--saffron-tint); color: var(--saffron-ink); }
 
 /* ---------- App shell ---------- */
 .app-shell { display: flex; min-height: 100vh; }

@@ -45,38 +45,55 @@ public class AuthService {
     private String verificationBaseUrl;
 
     @Transactional
-    public RegisterResponse register(RegisterRequest request){
+    public RegisterResponse register(RegisterRequest request) {
         log.info("Registering user with username={}", request.getUsername());
-        if(userRepository.existsByUsername(request.getUsername())){
+
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new UsernameAlreadyExistsException("UserName already in use");
         }
-        if(userRepository.existsByEmail(request.getEmail())){
+
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email already in use");
         }
-        if(userRepository.existsByPhoneNumber(request.getPhoneNumber())){
+
+        if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new PhoneNoAlreadyExistsException("Phone No. already in use");
         }
+
         User createdUser = User.builder()
                 .username(request.getUsername())
                 .name(request.getName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .emailVerified(true) // Portfolio demo: automatically verify new users
                 .build();
 
         User savedUser = userRepository.save(createdUser);
-        String verificationToken = emailVerificationTokenService.createVerificationToken(savedUser);
-        String verificationLink = verificationBaseUrl + "/api/v1/auth/verify-email?token=" + verificationToken;
-        emailService.sendEmail(
-                savedUser.getEmail(),
-                "Verify your SpendWise email",
-                "Hi " + savedUser.getName() + ",\n\n"
-                        + "Please verify your email by clicking the link below:\n\n"
-                        + verificationLink + "\n\n"
-                        + "This link will expire in 30 minutes.\n\n"
-                        + "Thanks,\n"
-                        + "SpendWise"
-        );
+
+        /*
+         * EMAIL VERIFICATION — TEMPORARILY DISABLED FOR PORTFOLIO DEMO
+         *
+         * Restore this flow when a production email service is configured.
+         *
+         * String verificationToken =
+         *         emailVerificationTokenService.createVerificationToken(savedUser);
+         *
+         * String verificationLink =
+         *         verificationBaseUrl + "/api/v1/auth/verify-email?token=" + verificationToken;
+         *
+         * emailService.sendEmail(
+         *         savedUser.getEmail(),
+         *         "Verify your SpendWise email",
+         *         "Hi " + savedUser.getName() + ",\n\n"
+         *                 + "Please verify your email by clicking the link below:\n\n"
+         *                 + verificationLink + "\n\n"
+         *                 + "This link will expire in 30 minutes.\n\n"
+         *                 + "Thanks,\n"
+         *                 + "SpendWise"
+         * );
+         */
+
         Wallet wallet = Wallet.builder()
                 .user(savedUser)
                 .walletName("Cash")
@@ -88,6 +105,7 @@ public class AuthService {
         walletRepository.save(wallet);
 
         log.info("User registered successfully with id={}", savedUser.getId());
+
         return RegisterResponse.builder()
                 .id(savedUser.getId())
                 .username(savedUser.getUsername())

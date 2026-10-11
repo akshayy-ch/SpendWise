@@ -20,8 +20,8 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const response = await register(form);
-      navigate("/verify-email", { state: { email: response.email } });
+      await register(form);
+      navigate("/login", { state: { registered: true } });
     } catch (err: any) {
       setError(err.response?.data?.message ?? "We couldn't create your account. Please check your details.");
     } finally { setLoading(false); }
