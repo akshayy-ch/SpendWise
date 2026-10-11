@@ -80,7 +80,7 @@ public class AuthService {
         Wallet wallet = Wallet.builder()
                 .user(savedUser)
                 .walletName("Cash")
-                .currentBalance(BigDecimal.valueOf(10000))
+                .currentBalance(BigDecimal.valueOf(0))
                 .status(WalletStatus.ACTIVE)
                 .type(WalletType.CASH)
                 .build();

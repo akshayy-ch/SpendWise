@@ -1,7 +1,8 @@
 package com.spendwise.enums;
 
 public enum WalletType {
-    CREDITCARD,
+    CASH,
     BANK,
-    CASH
+    CREDIT_CARD,
+    EWALLET
 }
