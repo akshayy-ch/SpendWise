@@ -1,0 +1,55 @@
+services:
+
+  db:
+    image: postgres:18
+    container_name: spendwise-db
+    environment:
+      POSTGRES_DB: spendWise
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spendwise-backend:1.0
+    container_name: spendwise-backend
+
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/spendWise
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
+      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
+      APP_VERIFICATION_BASE_URL: ${APP_VERIFICATION_BASE_URL}
+      SPRING_PROFILES_ACTIVE: prod
+      MAIL_HOST: sandbox.smtp.mailtrap.io
+      MAIL_PORT: "2525"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: spendwise-frontend:1.0
+    container_name: spendwise-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

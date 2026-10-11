@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const registered = (location.state as { registered?: boolean } | null)?.registered ?? false;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -23,11 +24,9 @@ export default function LoginPage() {
       navigate((location.state as { from?: string } | null)?.from ?? "/app", { replace: true });
     } catch (err: any) {
       const status = err.response?.status;
-      setError(status === 403
-        ? "Please verify your email before logging in."
-        : status === 401
-          ? "The username or password is incorrect."
-          : err.response?.data?.message ?? "Something went wrong. Please try again.");
+      setError(status === 401
+        ? "The username or password is incorrect."
+        : err.response?.data?.message ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -37,6 +36,7 @@ export default function LoginPage() {
     <form onSubmit={submit} className="auth-form">
       <label>Username<div className="input-wrap"><UserRound size={17}/><input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Enter your username" autoComplete="username" required /></div></label>
       <label>Password<div className="input-wrap"><LockKeyhole size={17}/><input type={showPassword ? "text" : "password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required /><button type="button" className="input-action" aria-label={showPassword ? "Hide password" : "Show password"} onClick={()=>setShowPassword(v=>!v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label>
+      {registered && !error && <div className="form-success" role="status">Account created. Sign in to continue.</div>}
       {error && <div className="form-error">{error}</div>}
       <button className="button button-primary auth-submit" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
       <p className="auth-switch">Don't have an account? <Link to="/register">Create one</Link></p>

@@ -31,3 +31,23 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Node.js dependencies
+node_modules/
+
+# Frontend build output
+frontend/dist/
+
+# Vite cache
+frontend/node_modules/.vite/
+
+# Docker / local overrides
+docker-compose.override.yml
+
+# Logs
+*.log

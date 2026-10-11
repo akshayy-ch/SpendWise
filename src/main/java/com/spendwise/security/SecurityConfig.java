@@ -36,6 +36,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(
+                                org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
+                                        .to("health")
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception

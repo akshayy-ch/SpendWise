@@ -4,7 +4,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AppShell from "./components/AppShell";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
-import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import DashboardPage from "./pages/app/DashboardPage";
 import ExpensesPage from "./pages/app/ExpensesPage";
 import WalletsPage from "./pages/app/WalletsPage";
@@ -24,7 +23,6 @@ export default function App() {
     <Route path="/" element={<LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
-    <Route path="/verify-email" element={<VerifyEmailPage />} />
     <Route element={<ProtectedRoute />}>
       <Route path="/app" element={<AppShell />}>
         <Route index element={<DashboardPage />} />
